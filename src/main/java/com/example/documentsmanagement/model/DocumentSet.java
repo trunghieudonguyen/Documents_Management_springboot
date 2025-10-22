@@ -1,30 +1,38 @@
 package com.example.documentsmanagement.model;
+
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "document_set")
+@Table(name = "DOCUMENT_SET")
 public class DocumentSet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID_DOCUMENT_SET")
     private Long idDocumentSet;
 
+    @Column(name = "DOCUMENT_CODE", nullable = false, unique = true, length = 50)
     private String documentCode;
 
+    @Column(name = "OPENED_DATE")
     private LocalDate openedDate;
 
+    @Column(name = "DEPARTMENT", length = 100)
     private String department;
 
+    @Column(name = "AREA", length = 100)
     private String area;
 
+    @Column(name = "STATUS", length = 50)
     private String status;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "NOTE", columnDefinition = "CLOB")
     private String note;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id")
+    // Relationship: Many documents belong to one category
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CATEGORY_ID")
     private DocumentCategory category;
 
     // Constructors
