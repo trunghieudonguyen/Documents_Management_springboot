@@ -1,59 +1,76 @@
 package com.example.documentsmanagement.model;
+
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "DocumentCategory")
-
+@Table(name = "DOCUMENT_CATEGORY")
 public class DocumentCategory {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idDocument_Category;
+    @Column(name = "ID_DOCUMENT_CATEGORY")
+    private Long idDocumentCategory;
 
-    private String shortName;
+    @Column(name = "SYMBOL", nullable = false, length = 50)
+    private String symbol;
 
-    private String fullName;
+    @Column(name = "CONTENT", nullable = false, length = 255)
+    private String content;
 
-    private String description;
+    @Column(name = "RETENTION_PERIOD", length = 100)
+    private String retentionPeriod;
 
-    // Constructors
+    @Column(name = "NOTE", length = 255)
+    private String note;
+
+    // 🔹 Constructors
     public DocumentCategory() {}
 
-    public DocumentCategory(String shortName, String fullName, String description) {
-        this.shortName = shortName;
-        this.fullName = fullName;
-        this.description = description;
+    public DocumentCategory(String symbol, String content, String retentionPeriod, String note) {
+        this.symbol = symbol;
+        this.content = content;
+        this.retentionPeriod = retentionPeriod;
+        this.note = note;
     }
 
-    // Getters & Setters
-    public Long getIdDocument_Category() {
-        return idDocument_Category;
+    // 🔹 Getters & Setters
+    public Long getIdDocumentCategory() {
+        return idDocumentCategory;
     }
 
-    public void setIdDocument_Category(Long idDocument_Category) {
-        this.idDocument_Category = idDocument_Category;
+    public void setIdDocumentCategory(Long idDocumentCategory) {
+        this.idDocumentCategory = idDocumentCategory;
     }
 
-    public String getShortName() {
-        return shortName;
+    public String getSymbol() {
+        return symbol;
     }
 
-    public void setShortName(String shortName) {
-        this.shortName = shortName;
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getContent() {
+        return content;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public String getDescription() {
-        return description;
+    public String getRetentionPeriod() {
+        return retentionPeriod;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setRetentionPeriod(String retentionPeriod) {
+        this.retentionPeriod = retentionPeriod;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }

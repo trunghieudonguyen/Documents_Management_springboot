@@ -1,5 +1,8 @@
 package com.example.documentsmanagement.controller;
 
+import com.example.documentsmanagement.model.Document;
+import com.example.documentsmanagement.repository.DocumentCategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -9,10 +12,12 @@ import com.example.documentsmanagement.model.DocumentCategory;
 import com.example.documentsmanagement.service.DocumentCategoryService;
 
 @RestController
-@RequestMapping("/api/documentcategory")
+@RequestMapping("/api/categories")
+@CrossOrigin(origins = "http://localhost:3000") // cho phép frontend React truy cập
 public class DocumentCategoryController {
 
     private final DocumentCategoryService service;
+    @Autowired
 
     public DocumentCategoryController(DocumentCategoryService service) {
         this.service = service;
