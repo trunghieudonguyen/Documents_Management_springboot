@@ -30,11 +30,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         if (request == null || request.getUsername() == null || request.getPassword() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Missing username or password"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Thiếu tên người dùng hoặc mật khẩu"));
         }
 
 
-// Call repository method that asks Oracle to hash the incoming password with SHA-256 and compare
+        // Gọi đến DB yêu cầu Oracle băm mật khẩu bằng SHA-256 và so sánh
         Optional<Librarian> librarianOpt = librarianRepository.findByUsernameAndPasswordHashed(request.getUsername(), request.getPassword());
 
 
