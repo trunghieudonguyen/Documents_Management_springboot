@@ -34,14 +34,11 @@ public class RequestDocument {
     @JoinColumn(name = "borrower_id")
     private Borrower borrower;
 
-    @ManyToOne
-    @JoinColumn(name = "document_set_id")
-    private DocumentSet documentSet;
 
     // Constructors
     public RequestDocument() {}
 
-    public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType, LocalDate returnDeadline, int extensionCount, String signer, String attachmentPath, Librarian librarian, Borrower borrower, DocumentSet documentSet) {
+    public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType, LocalDate returnDeadline, int extensionCount, String signer, String attachmentPath, Librarian librarian, Borrower borrower) {
         this.documentNumber = documentNumber;
         this.borrowDate = borrowDate;
         this.copyType = copyType;
@@ -51,7 +48,6 @@ public class RequestDocument {
         this.attachmentPath = attachmentPath;
         this.librarian = librarian;
         this.borrower = borrower;
-        this.documentSet = documentSet;
     }
 
     // Getters & Setters
@@ -135,11 +131,4 @@ public class RequestDocument {
         this.borrower = borrower;
     }
 
-    public DocumentSet getDocumentSet() {
-        return documentSet;
-    }
-
-    public void setDocumentSet(DocumentSet documentSet) {
-        this.documentSet = documentSet;
-    }
 }
