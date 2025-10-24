@@ -32,7 +32,7 @@ public class DocumentCategoryService {
     public DocumentCategory update(Long id, DocumentCategory changes) {
         // Basic update: ensure id is set on entity and save.
         try {
-            java.lang.reflect.Field idField = changes.getClass().getDeclaredField("idDocument_Category");
+            java.lang.reflect.Field idField = changes.getClass().getDeclaredField("idDocumentCategory");
             idField.setAccessible(true);
             Object val = idField.get(changes);
             if (val == null) {

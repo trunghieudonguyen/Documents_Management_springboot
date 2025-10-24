@@ -1,11 +1,12 @@
 package com.example.documentsmanagement.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
-import java.util.Optional;
 import com.example.documentsmanagement.model.RequestDocument;
 import com.example.documentsmanagement.repository.RequestDocumentRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -17,43 +18,50 @@ public class RequestDocumentService {
         this.repository = repository;
     }
 
-    public RequestDocument create(RequestDocument entity) {
-        return repository.save(entity);
-    }
-
-    public Optional<RequestDocument> getById(Long id) {
-        return repository.findById(id);
-    }
-
-    public List<RequestDocument> listAll() {
+    // Lấy toàn bộ danh sách
+    public List<RequestDocument> findAll() {
         return repository.findAll();
     }
 
-    public RequestDocument update(Long id, RequestDocument changes) {
-        // Basic update: ensure id is set on entity and save.
-        try {
-            java.lang.reflect.Field idField = changes.getClass().getDeclaredField("idRequestDocument");
-            idField.setAccessible(true);
-            Object val = idField.get(changes);
-            if (val == null) {
-                // set id value reflectively
-                idField.set(changes, id);
-            }
-        } catch (Exception ex) {
-            // If reflection fails, ignore; repository.save will still work if entity has id set.
-        }
-        return repository.save(changes);
+    // Tìm theo ID
+    public Optional<RequestDocument> findById(Long id) {
+        return repository.findById(id);
     }
 
+    // Thêm mới yêu cầu mượn tài liệu
+    public RequestDocument create(RequestDocument requestDocument) {
+        requestDocument.setIdRequestDocument(null); // đảm bảo tạo mới
+        return repository.save(requestDocument);
+    }
+
+    // Cập nhật yêu cầu mượn
+    public Optional<RequestDocument> update(Long id, RequestDocument incoming) {
+        return repository.findById(id).map(existing -> {
+            existing.setDocumentNumber(incoming.getDocumentNumber());
+            existing.setBorrowDate(incoming.getBorrowDate());
+            existing.setCopyType(incoming.getCopyType());
+            existing.setReturnDeadline(incoming.getReturnDeadline());
+            existing.setExtensionCount(incoming.getExtensionCount());
+            existing.setSigner(incoming.getSigner());
+            existing.setAttachmentPath(incoming.getAttachmentPath());
+            existing.setLibrarian(incoming.getLibrarian());
+            existing.setBorrower(incoming.getBorrower());
+            existing.setDocument(incoming.getDocument());
+            return repository.save(existing);
+        });
+    }
+
+    // Xóa yêu cầu mượn
     public void delete(Long id) {
         repository.deleteById(id);
     }
 
-    public List<RequestDocument> search(String q) {
-        return repository.searchByName(q);
+    // Tìm kiếm theo mã số tài liệu hoặc người ký
+    public List<RequestDocument> search(String keyword) {
+        return repository.searchByKeyword(keyword == null ? "" : keyword);
     }
 
-    // Example statistics: count
+    // Đếm tổng số yêu cầu
     public long count() {
         return repository.count();
     }

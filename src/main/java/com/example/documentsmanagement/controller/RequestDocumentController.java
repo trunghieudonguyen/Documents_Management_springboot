@@ -1,15 +1,16 @@
 package com.example.documentsmanagement.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
-import java.util.List;
-import java.util.Optional;
 import com.example.documentsmanagement.model.RequestDocument;
 import com.example.documentsmanagement.service.RequestDocumentService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/requestdocument")
+@RequestMapping("/api/request-documents")
 public class RequestDocumentController {
 
     private final RequestDocumentService service;
@@ -18,42 +19,53 @@ public class RequestDocumentController {
         this.service = service;
     }
 
+    // 🟢 Tạo mới yêu cầu mượn tài liệu
     @PostMapping
-    public ResponseEntity<RequestDocument> create(@RequestBody RequestDocument entity) {
-        RequestDocument created = service.create(entity);
-        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    public ResponseEntity<RequestDocument> create(@RequestBody RequestDocument requestDocument) {
+        RequestDocument created = service.create(requestDocument);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    // 🟢 Lấy yêu cầu mượn theo ID
     @GetMapping("/{id}")
-    public ResponseEntity<RequestDocument> getById(@PathVariable("id") Long id) {
-        Optional<RequestDocument> o = service.getById(id);
-        return o.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<RequestDocument> getById(@PathVariable Long id) {
+        Optional<RequestDocument> found = service.findById(id);
+        return found.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // 🟢 Lấy toàn bộ danh sách yêu cầu mượn
     @GetMapping
-    public List<RequestDocument> listAll() {
-        return service.listAll();
+    public ResponseEntity<List<RequestDocument>> getAll() {
+        List<RequestDocument> list = service.findAll();
+        return ResponseEntity.ok(list);
     }
 
+    // 🟢 Cập nhật yêu cầu mượn tài liệu
     @PutMapping("/{id}")
-    public ResponseEntity<RequestDocument> update(@PathVariable("id") Long id, @RequestBody RequestDocument changes) {
-        RequestDocument updated = service.update(id, changes);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<RequestDocument> update(@PathVariable Long id, @RequestBody RequestDocument updatedData) {
+        Optional<RequestDocument> updated = service.update(id, updatedData);
+        return updated.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // 🟢 Xóa yêu cầu mượn tài liệu
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
 
+    // 🟢 Tìm kiếm theo từ khóa (mã tài liệu hoặc người ký)
     @GetMapping("/search")
-    public List<RequestDocument> search(@RequestParam(value = "q", required = false, defaultValue = "") String q) {
-        return service.search(q);
+    public ResponseEntity<List<RequestDocument>> search(
+            @RequestParam(value = "q", required = false, defaultValue = "") String keyword) {
+        return ResponseEntity.ok(service.search(keyword));
     }
 
+    // 🟢 Thống kê số lượng yêu cầu mượn tài liệu
     @GetMapping("/stats/count")
-    public long count() {
-        return service.count();
+    public ResponseEntity<Long> count() {
+        return ResponseEntity.ok(service.count());
     }
 }

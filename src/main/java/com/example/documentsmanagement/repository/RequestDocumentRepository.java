@@ -7,10 +7,8 @@ import com.example.documentsmanagement.model.RequestDocument;
 import java.util.List;
 
 public interface RequestDocumentRepository extends JpaRepository<RequestDocument, Long> {
-
-    // Simple example search by a 'name' property if present
-    @Query("""
-        select e from RequestDocument e where lower(COALESCE(e.documentNumber, '')) like lower(concat('%', :q, '%'))
-    """)
-    List<RequestDocument> searchByName(@Param("q") String q);
+    @Query("SELECT r FROM RequestDocument r " +
+            "WHERE LOWER(r.documentNumber) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(r.signer) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<RequestDocument> searchByKeyword(String keyword);
 }

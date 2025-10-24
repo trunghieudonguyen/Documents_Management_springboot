@@ -7,21 +7,21 @@ import java.time.LocalDate;
  * Entity representing a document extension (renewal) record.
  *
  * <p>
- * Each {@link RequestDocument} can have multiple {@link DocumentExtension} entries,
+ * Each {@link RequestDocument} can have multiple {@link DocumentDuration} entries,
  * representing the history of renewal actions.
  * </p>
  */
 @Entity
-@Table(name = "DOCUMENT_EXTENSION")
-public class DocumentExtension {
+@Table(name = "DOCUMENT_DURATION")
+public class DocumentDuration {
 
     /**
-     * Primary key for DocumentExtension.
+     * Primary key for DocumentDuration.
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_DOCUMENT_EXTENSION")
-    private Long idDocumentExtension;
+    private Long idDocumentDuration;
 
     /**
      * The related RequestDocument entity that this extension belongs to.
@@ -56,7 +56,7 @@ public class DocumentExtension {
     /**
      * Default constructor.
      */
-    public DocumentExtension() {}
+    public DocumentDuration() {}
 
     /**
      * Parameterized constructor for convenience.
@@ -66,8 +66,8 @@ public class DocumentExtension {
      * @param extensionDate   The date of this extension.
      * @param attachedImage   The attached image (if any).
      */
-    public DocumentExtension(RequestDocument requestDocument, Integer extensionCount,
-                             LocalDate extensionDate, String attachedImage) {
+    public DocumentDuration(RequestDocument requestDocument, Integer extensionCount,
+                            LocalDate extensionDate, String attachedImage) {
         this.requestDocument = requestDocument;
         this.extensionCount = extensionCount;
         this.extensionDate = extensionDate;
@@ -78,12 +78,12 @@ public class DocumentExtension {
     // Getters and Setters
     // ------------------------------
 
-    public Long getIdDocumentExtension() {
-        return idDocumentExtension;
+    public Long getIdDocumentDuration() {
+        return idDocumentDuration;
     }
 
-    public void setIdDocumentExtension(Long idDocumentExtension) {
-        this.idDocumentExtension = idDocumentExtension;
+    public void setIdDocumentDuration(Long idDocumentDuration) {
+        this.idDocumentDuration = idDocumentDuration;
     }
 
     public RequestDocument getRequestDocument() {

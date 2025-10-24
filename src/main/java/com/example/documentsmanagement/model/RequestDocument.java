@@ -1,44 +1,57 @@
 package com.example.documentsmanagement.model;
+
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "request_document")
-
-
+@Table(name = "REQUEST_DOCUMENT")
 public class RequestDocument {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID_REQUEST_DOCUMENT")
     private Long idRequestDocument;
 
+    @Column(name = "DOCUMENT_NUMBER", length = 100)
     private String documentNumber;
 
+    @Column(name = "BORROW_DATE")
     private LocalDate borrowDate;
 
-    private String copyType; // e.g. Original, Copy
+    @Column(name = "COPY_TYPE", length = 50)
+    private String copyType;
 
+    @Column(name = "RETURN_DEADLINE")
     private LocalDate returnDeadline;
 
+    @Column(name = "EXTENSION_COUNT")
     private int extensionCount;
 
+    @Column(name = "SIGNER", length = 100)
     private String signer;
 
+    @Column(name = "ATTACHMENT_PATH", length = 255)
     private String attachmentPath;
 
     @ManyToOne
-    @JoinColumn(name = "librarian_id")
+    @JoinColumn(name = "LIBRARIAN_ID")
     private Librarian librarian;
 
     @ManyToOne
-    @JoinColumn(name = "borrower_id")
+    @JoinColumn(name = "BORROWER_ID")
     private Borrower borrower;
 
+    // 🔗 Thêm liên kết nhiều RequestDocuments thuộc về một Document
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DOCUMENT_ID", referencedColumnName = "ID_DOCUMENT")
+    private Document document;
 
     // Constructors
     public RequestDocument() {}
 
-    public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType, LocalDate returnDeadline, int extensionCount, String signer, String attachmentPath, Librarian librarian, Borrower borrower) {
+    public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType,
+                           LocalDate returnDeadline, int extensionCount, String signer,
+                           String attachmentPath, Librarian librarian, Borrower borrower, Document document) {
         this.documentNumber = documentNumber;
         this.borrowDate = borrowDate;
         this.copyType = copyType;
@@ -48,6 +61,7 @@ public class RequestDocument {
         this.attachmentPath = attachmentPath;
         this.librarian = librarian;
         this.borrower = borrower;
+        this.document = document;
     }
 
     // Getters & Setters
@@ -55,7 +69,7 @@ public class RequestDocument {
         return idRequestDocument;
     }
 
-    public void setId(Long idRequestDocument) {
+    public void setIdRequestDocument(Long idRequestDocument) {
         this.idRequestDocument = idRequestDocument;
     }
 
@@ -131,4 +145,11 @@ public class RequestDocument {
         this.borrower = borrower;
     }
 
+    public Document getDocument() {
+        return document;
+    }
+
+    public void setDocument(Document document) {
+        this.document = document;
+    }
 }

@@ -1,6 +1,8 @@
 package com.example.documentsmanagement.model;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "DOCUMENT_CATEGORY")
@@ -11,8 +13,8 @@ public class DocumentCategory {
     @Column(name = "ID_DOCUMENT_CATEGORY")
     private Long idDocumentCategory;
 
-    @Column(name = "SYMBOL", nullable = false, length = 50)
-    private String symbol;
+    @Column(name = "SIGN", nullable = false, length = 50)
+    private String sign;
 
     @Column(name = "CONTENT", nullable = false, length = 255)
     private String content;
@@ -23,17 +25,21 @@ public class DocumentCategory {
     @Column(name = "NOTE", length = 255)
     private String note;
 
-    // 🔹 Constructors
+    // 🔗 One Category has many Documents
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
+
+    // Constructors
     public DocumentCategory() {}
 
-    public DocumentCategory(String symbol, String content, String retentionPeriod, String note) {
-        this.symbol = symbol;
+    public DocumentCategory(String sign, String content, String retentionPeriod, String note) {
+        this.sign = sign;
         this.content = content;
         this.retentionPeriod = retentionPeriod;
         this.note = note;
     }
 
-    // 🔹 Getters & Setters
+    // Getters & Setters
     public Long getIdDocumentCategory() {
         return idDocumentCategory;
     }
@@ -42,12 +48,12 @@ public class DocumentCategory {
         this.idDocumentCategory = idDocumentCategory;
     }
 
-    public String getSymbol() {
-        return symbol;
+    public String getSign() {
+        return sign;
     }
 
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
+    public void setSign(String sign) {
+        this.sign = sign;
     }
 
     public String getContent() {
@@ -72,5 +78,24 @@ public class DocumentCategory {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public List<Document> getDocuments() {
+        return documents;
+    }
+
+    public void setDocuments(List<Document> documents) {
+        this.documents = documents;
+    }
+
+    // Helper methods for bidirectional relationship
+    public void addDocument(Document document) {
+        documents.add(document);
+        document.setCategory(this);
+    }
+
+    public void removeDocument(Document document) {
+        documents.remove(document);
+        document.setCategory(null);
     }
 }

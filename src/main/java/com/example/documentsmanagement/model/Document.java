@@ -2,6 +2,7 @@ package com.example.documentsmanagement.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "DOCUMENT")
@@ -21,9 +22,6 @@ public class Document {
     @Column(name = "DESCRIPTION", length = 500)
     private String description;
 
-    @Column(name = "TYPE", length = 100)
-    private String type;
-
     @Column(name = "STATUS", length = 50)
     private String status;
 
@@ -36,22 +34,40 @@ public class Document {
     @Column(name = "NOTE", columnDefinition = "CLOB")
     private String note;
 
+    @Column(name = "DEPARTMENT", length = 150)
+    private String department;
+
+    @Column(name = "AREA", length = 150)
+    private String area;
+
+    // Nhiều Documents thuộc về một Category
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_DOCUMENT_CATEGORY", referencedColumnName = "ID_DOCUMENT_CATEGORY")
+    private DocumentCategory category;
+
+    // Một Document có thể có nhiều RequestDocuments
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RequestDocument> requests;
+
     // Constructors
     public Document() {}
 
-    public Document(String documentCode, String title, String type, String status,
-                    LocalDate createdDate, LocalDate eventDate, String note, String description) {
+    public Document(String documentCode, String title, String description, String status,
+                    LocalDate createdDate, LocalDate eventDate, String note,
+                    String department, String area, DocumentCategory category) {
         this.documentCode = documentCode;
         this.title = title;
-        this.type = type;
+        this.description = description;
         this.status = status;
         this.createdDate = createdDate;
         this.eventDate = eventDate;
         this.note = note;
-        this.description = description;
+        this.department = department;
+        this.area = area;
+        this.category = category;
     }
 
-    // Getters and setters
+    // Getters & Setters
     public Long getIdDocument() {
         return idDocument;
     }
@@ -84,14 +100,6 @@ public class Document {
         this.description = description;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getStatus() {
         return status;
     }
@@ -122,5 +130,37 @@ public class Document {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public DocumentCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(DocumentCategory category) {
+        this.category = category;
+    }
+
+    public List<RequestDocument> getRequests() {
+        return requests;
+    }
+
+    public void setRequests(List<RequestDocument> requests) {
+        this.requests = requests;
     }
 }

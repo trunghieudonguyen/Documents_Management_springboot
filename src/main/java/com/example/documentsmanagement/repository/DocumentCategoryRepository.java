@@ -10,7 +10,7 @@ public interface DocumentCategoryRepository extends JpaRepository<DocumentCatego
 
     // Simple example search by a 'name' property if present
     @Query("""
-        SELECT c FROM DocumentCategory c WHERE LOWER(c.symbol) LIKE LOWER(CONCAT('%', :q, '%'))
+        SELECT c FROM DocumentCategory c WHERE LOWER(c.sign) LIKE LOWER(CONCAT('%', :q, '%'))
     """)
     List<DocumentCategory> searchByName(@Param("q") String q);
 }
