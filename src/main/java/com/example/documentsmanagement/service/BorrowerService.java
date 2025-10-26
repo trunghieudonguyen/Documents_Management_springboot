@@ -36,11 +36,11 @@ public class BorrowerService {
             idField.setAccessible(true);
             Object val = idField.get(changes);
             if (val == null) {
-                // set id value reflectively
+                // Tham chiếu ID
                 idField.set(changes, id);
             }
         } catch (Exception ex) {
-            // If reflection fails, ignore; repository.save will still work if entity has id set.
+            // Nếu tham chiếu không thành công, bỏ qua; repository.save vẫn hoạt động nếu thực thể có id được đặt
         }
         return repository.save(changes);
     }

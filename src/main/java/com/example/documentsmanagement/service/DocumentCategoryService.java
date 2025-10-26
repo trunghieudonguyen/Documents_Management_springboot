@@ -30,7 +30,7 @@ public class DocumentCategoryService {
     }
 
     public DocumentCategory update(Long id, DocumentCategory changes) {
-        // Basic update: ensure id is set on entity and save.
+        // Cập nhật cơ bản: đảm bảo id được đặt trên thực thể và lưu.
         try {
             java.lang.reflect.Field idField = changes.getClass().getDeclaredField("idDocumentCategory");
             idField.setAccessible(true);
@@ -40,7 +40,7 @@ public class DocumentCategoryService {
                 idField.set(changes, id);
             }
         } catch (Exception ex) {
-            // If reflection fails, ignore; repository.save will still work if entity has id set.
+            //Nếu tham chiếu không thành công, bỏ qua; repository.save vẫn hoạt động nếu thực thể có id được đặt
         }
         return repository.save(changes);
     }
@@ -53,7 +53,7 @@ public class DocumentCategoryService {
         return repository.searchByName(q);
     }
 
-    // Example statistics: count
+    // Đếm
     public long count() {
         return repository.count();
     }

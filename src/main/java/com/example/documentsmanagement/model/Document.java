@@ -52,9 +52,9 @@ public class Document {
     // Constructors
     public Document() {}
 
-    public Document(String documentCode, String title, String description, String status,
+    public Document(String title, DocumentCategory category, String department, String area,
                     LocalDate createdDate, LocalDate eventDate, String note,
-                    String department, String area, DocumentCategory category) {
+                    String documentCode,  String description, String status) {
         this.documentCode = documentCode;
         this.title = title;
         this.description = description;
