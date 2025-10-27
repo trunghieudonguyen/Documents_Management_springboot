@@ -10,15 +10,17 @@ import java.util.List;
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     // =========================================================================
-    // 🔍 TÌM KIẾM TOÀN VĂN (title, description, documentCode) - không phân biệt hoa thường
+    // 🔍 TÌM KIẾM TOÀN VĂN (title, documentCode) - không phân biệt hoa thường
     // =========================================================================
     @Query("""
         SELECT d FROM Document d
         WHERE LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
-           OR LOWER(d.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
            OR LOWER(d.documentCode) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(d.department) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(d.area) LIKE LOWER(CONCAT('%', :keyword, '%'))
+           OR LOWER(d.status) LIKE LOWER(CONCAT('%', :keyword, '%'))
     """)
-    List<Document> searchByTitle(@Param("keyword") String keyword);
+    List<Document> searchByKeyword(@Param("keyword") String keyword);
 
     // =========================================================================
     // ✅ KIỂM TRA SỰ TỒN TẠI CỦA DOCUMENT CODE (tránh trùng mã)
@@ -42,18 +44,21 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document> findByCategoryId(@Param("categoryId") Long categoryId);
 
     // =========================================================================
-    // ⚡ TỐI ƯU: LẤY MÃ DOCUMENT LỚN NHẤT THEO PREFIX
-    // -------------------------------------------------------------------------
-    // Mục đích: phục vụ hàm sinh documentCode trong DocumentService.
-    // Query này chỉ tìm document có mã bắt đầu bằng prefix (VD: "HC23P3A")
-    // và lấy ra mã lớn nhất theo thứ tự chữ, cực nhanh nếu có index.
+    // ⚡ LẤY MÃ DOCUMENT LỚN NHẤT THEO PREFIX (tối ưu cho sinh code)
     // =========================================================================
     @Query("SELECT MAX(d.documentCode) FROM Document d WHERE d.documentCode LIKE CONCAT(:prefix, '%')")
     String findMaxDocumentCodeByPrefix(@Param("prefix") String prefix);
 
     // =========================================================================
-    // ⚙️ GỢI Ý (tùy chọn):
-    // Có thể thêm index trong database để tối ưu truy vấn findMaxDocumentCodeByPrefix:
-    // ALTER TABLE documents ADD INDEX idx_document_code (document_code);
+    // 🔎 HÀM SEARCH CHUNG CHO SERVICE
     // =========================================================================
+    @Query("""
+        SELECT d FROM Document d
+        WHERE LOWER(d.title) LIKE :keyword
+           OR LOWER(d.documentCode) LIKE :keyword
+           OR LOWER(d.department) LIKE :keyword
+           OR LOWER(d.area) LIKE :keyword
+           OR LOWER(d.status) LIKE :keyword
+    """)
+    List<Document> findDocumentsByKeyword(@Param("keyword") String keyword);
 }

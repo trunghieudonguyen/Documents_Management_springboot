@@ -1,5 +1,7 @@
 package com.example.documentsmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,14 +15,12 @@ public class Document {
     @Column(name = "ID_DOCUMENT")
     private Long idDocument;
 
-    @Column(name = "DOCUMENT_CODE", nullable = false, unique = true, length = 50)
+    // Mã tài liệu (duy nhất, có thể null khi tạo mới)
+    @Column(name = "DOCUMENT_CODE", unique = true, length = 50)
     private String documentCode;
 
     @Column(name = "TITLE", nullable = false, length = 255)
     private String title;
-
-    @Column(name = "DESCRIPTION", length = 500)
-    private String description;
 
     @Column(name = "STATUS", length = 50)
     private String status;
@@ -43,21 +43,24 @@ public class Document {
     // Nhiều Documents thuộc về một Category
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_DOCUMENT_CATEGORY", referencedColumnName = "ID_DOCUMENT_CATEGORY")
+    @JsonBackReference // Ngăn vòng lặp vô hạn khi serialize JSON
     private DocumentCategory category;
 
-    // Một Document có thể có nhiều RequestDocuments
+    // Một Document có thể có nhiều RequestDocuments (nếu có bảng này)
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore // Không cần trả về requestDocuments khi gọi API document
     private List<RequestDocument> requests;
 
-    // Constructors
+    // =========================================================
+    // CONSTRUCTORS
+    // =========================================================
     public Document() {}
 
     public Document(String title, DocumentCategory category, String department, String area,
                     LocalDate createdDate, LocalDate eventDate, String note,
-                    String documentCode,  String description, String status) {
+                    String documentCode, String status) {
         this.documentCode = documentCode;
         this.title = title;
-        this.description = description;
         this.status = status;
         this.createdDate = createdDate;
         this.eventDate = eventDate;
@@ -67,7 +70,9 @@ public class Document {
         this.category = category;
     }
 
-    // Getters & Setters
+    // =========================================================
+    // GETTERS & SETTERS
+    // =========================================================
     public Long getIdDocument() {
         return idDocument;
     }
@@ -90,14 +95,6 @@ public class Document {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getStatus() {

@@ -1,5 +1,6 @@
 package com.example.documentsmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,27 +20,32 @@ public class DocumentCategory {
     @Column(name = "CONTENT", nullable = false, length = 255)
     private String content;
 
-    @Column(name = "RETENTION_PERIOD", length = 100)
-    private String retentionPeriod;
+    @Column(name = "DURATION", length = 100)
+    private String duration;
 
     @Column(name = "NOTE", length = 255)
     private String note;
 
-    // 🔗 One Category has many Documents
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    // One Category has many Documents
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference // Giữ liên kết chính khi serialize JSON
     private List<Document> documents = new ArrayList<>();
 
-    // Constructors
+    // =========================================================
+    // CONSTRUCTORS
+    // =========================================================
     public DocumentCategory() {}
 
-    public DocumentCategory(String sign, String content, String retentionPeriod, String note) {
+    public DocumentCategory(String sign, String content, String duration, String note) {
         this.sign = sign;
         this.content = content;
-        this.retentionPeriod = retentionPeriod;
+        this.duration = duration;
         this.note = note;
     }
 
-    // Getters & Setters
+    // =========================================================
+    // GETTERS & SETTERS
+    // =========================================================
     public Long getIdDocumentCategory() {
         return idDocumentCategory;
     }
@@ -64,12 +70,12 @@ public class DocumentCategory {
         this.content = content;
     }
 
-    public String getRetentionPeriod() {
-        return retentionPeriod;
+    public String getDuration() {
+        return duration;
     }
 
-    public void setRetentionPeriod(String retentionPeriod) {
-        this.retentionPeriod = retentionPeriod;
+    public void setDuration(String duration) {
+        this.duration = duration;
     }
 
     public String getNote() {
@@ -88,7 +94,9 @@ public class DocumentCategory {
         this.documents = documents;
     }
 
-    // Helper methods for bidirectional relationship
+    // =========================================================
+    // QUẢN LÝ QUAN HỆ HAI CHIỀU
+    // =========================================================
     public void addDocument(Document document) {
         documents.add(document);
         document.setCategory(this);

@@ -19,9 +19,10 @@ public class DocumentService {
         this.repository = repository;
     }
 
-    // =====================================================================
-    // Các hàm CRUD cơ bản
-    // =====================================================================
+    // =========================================================
+    // CRUD CƠ BẢN
+    // =========================================================
+
     public List<Document> findAll() {
         return repository.findAll();
     }
@@ -35,21 +36,20 @@ public class DocumentService {
             document.setCreatedDate(LocalDate.now());
         }
 
-        // Lưu tạm để có ID
+        // Lưu trước để sinh ID (nếu cần)
         Document saved = repository.save(document);
 
-        // Sinh mã tài liệu tối ưu
+        // 🔹 Sinh mã tài liệu duy nhất (theo năm + loại)
         String code = generateDocumentCode(saved);
         saved.setDocumentCode(code);
 
-        // Lưu lại mã code
+        // Cập nhật lại mã chính thức
         return repository.save(saved);
     }
 
     public Optional<Document> update(Long id, Document updatedData) {
         return repository.findById(id).map(existing -> {
             existing.setTitle(updatedData.getTitle());
-            existing.setDescription(updatedData.getDescription());
             existing.setStatus(updatedData.getStatus());
             existing.setCreatedDate(updatedData.getCreatedDate());
             existing.setEventDate(updatedData.getEventDate());
@@ -57,6 +57,7 @@ public class DocumentService {
             existing.setDepartment(updatedData.getDepartment());
             existing.setArea(updatedData.getArea());
             existing.setCategory(updatedData.getCategory());
+            // Sinh lại mã nếu thay đổi năm hoặc loại tài liệu
             existing.setDocumentCode(generateDocumentCode(existing));
             return repository.save(existing);
         });
@@ -69,10 +70,11 @@ public class DocumentService {
         repository.deleteById(id);
     }
 
-    // =====================================================================
-    // SINH MÃ DOCUMENT CODE TỐI ƯU
-    // =====================================================================
-    private String generateDocumentCode(Document d) {
+    // =========================================================
+    // SINH MÃ DOCUMENT CODE — CỰC TỐI ƯU
+    // =========================================================
+    private synchronized String generateDocumentCode(Document d) {
+        // 1️⃣ Thành phần cơ bản
         String sign = (d.getCategory() != null && d.getCategory().getSign() != null)
                 ? d.getCategory().getSign().toUpperCase()
                 : "XX";
@@ -81,30 +83,28 @@ public class DocumentService {
                 ? String.valueOf(d.getCreatedDate().getYear()).substring(2)
                 : String.valueOf(LocalDate.now().getYear()).substring(2);
 
-        String department = formatDepartment(d.getDepartment());
+        String dept = formatDepartment(d.getDepartment());
         String area = formatArea(d.getArea());
 
-        // Lấy số thứ tự tiếp theo bằng truy vấn nhanh
-        int nextNumber = getNextSequence(sign, year, department, area);
+        // 2️⃣ Tiền tố
+        String prefix = sign + year + dept + area;
 
-        return sign + year + department + area + String.format("%04d", nextNumber);
+        // 3️⃣ Tìm mã lớn nhất theo prefix (chỉ 1 query, O(1) nếu có index)
+        String maxCode = repository.findMaxDocumentCodeByPrefix(prefix);
+
+        // 4️⃣ Tính số thứ tự kế tiếp — reset mỗi năm & mỗi loại (sign)
+        int nextNumber = extractNextNumber(maxCode, prefix);
+
+        // 5️⃣ Trả về mã hoàn chỉnh
+        return prefix + String.format("%05d", nextNumber); // 00001–99999
     }
 
     /**
-     * Hàm này chỉ query đúng nhóm tài liệu có cùng prefix và lấy mã lớn nhất bằng SQL -> cực nhanh kể cả 100k+ bản ghi
+     * Xử lý phần số thứ tự kế tiếp (tăng dần, reset mỗi năm + loại)
      */
-    private int getNextSequence(String sign, String year, String dept, String area) {
-        String prefix = sign + year + dept + area;
-
-        // Dùng repository query để lấy documentCode lớn nhất
-        String maxCode = repository.findMaxDocumentCodeByPrefix(prefix);
-
-        if (maxCode == null) {
-            return 1; // chưa có -> bắt đầu từ 0001
-        }
-
+    private int extractNextNumber(String maxCode, String prefix) {
+        if (maxCode == null || maxCode.isBlank()) return 1;
         try {
-            // Lấy 4 số cuối ra
             String numPart = maxCode.substring(prefix.length());
             return Integer.parseInt(numPart) + 1;
         } catch (Exception e) {
@@ -112,36 +112,15 @@ public class DocumentService {
         }
     }
 
-    // =====================================================================
-    // Format hỗ trợ
-    // =====================================================================
+    // =========================================================
+    // FORMAT DỮ LIỆU ĐẦU VÀO
+    // =========================================================
     private String formatArea(String area) {
         if (area == null) return "X";
-        String lower = area.toLowerCase();
+        String a = area.toLowerCase();
 
-        // Hà Nội
-        if (lower.contains("hà nội")
-                || lower.contains("tp hà nội")
-                || lower.contains("tp. hà nội")
-                || lower.contains("tp.hn")
-                || lower.contains("tphn")
-                || lower.contains("tp hn")
-                || lower.contains("hn")) {
-            return "A";
-        }
-
-        // TP.HCM
-        if (lower.contains("tphcm")
-                || lower.contains("tp.hcm")
-                || lower.contains("tp hcm")
-                || lower.contains("tp hồ chí minh")
-                || lower.contains("tp. hồ chí minh")
-                || lower.contains("tp.hồ chí minh")
-                || lower.contains("thành phố hồ chí minh")
-                || lower.contains("hồ chí minh")
-                || lower.contains("hcm")) {
-            return "B";
-        }
+        if (a.contains("hà nội") || a.contains("hn") || a.contains("tphn")) return "A";
+        if (a.contains("hcm") || a.contains("hồ chí minh")) return "B";
         return "X";
     }
 
@@ -150,5 +129,27 @@ public class DocumentService {
         return department.replace("Phòng", "P")
                 .replace("phòng", "P")
                 .replaceAll("\\s+", "");
+    }
+
+    // =========================================================
+    // CÁC CHỨC NĂNG PHỤ KHÁC
+    // =========================================================
+    public List<Document> search(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return repository.findAll();
+        }
+        return repository.searchByKeyword(keyword.toLowerCase());
+    }
+
+    public Long count() {
+        return repository.count();
+    }
+
+    public List<Document> findByStatus(String status) {
+        return repository.findByStatus(status);
+    }
+
+    public List<Document> findByDepartment(String department) {
+        return repository.findByDepartment(department);
     }
 }
