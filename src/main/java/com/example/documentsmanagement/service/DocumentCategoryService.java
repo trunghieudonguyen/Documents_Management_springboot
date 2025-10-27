@@ -50,7 +50,7 @@ public class DocumentCategoryService {
     }
 
     public List<DocumentCategory> search(String q) {
-        return repository.searchByName(q);
+        return repository.searchByKeyword(q);
     }
 
     // Đếm

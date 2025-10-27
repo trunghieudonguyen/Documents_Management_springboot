@@ -9,18 +9,29 @@ public class Librarian {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idlibrarian;
 
+    @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "phone_number")
     private String phoneNumber;
 
+    @Column(name = "email")
     private String email;
 
+    @Column(name = "rank")
     private String rank;
 
+    @Column(name = "position")
     private String position;
 
+    @Column(name = "staff_code")
     private String staffCode;
+
+    @Column(name = "username")
     private String username;
+
+    @Column(name = "password")
+    private String password;
 
     public String getPassword() {
         return password;
@@ -38,7 +49,6 @@ public class Librarian {
         this.username = username;
     }
 
-    private String password;
 
     // Constructors
     public Librarian() {}

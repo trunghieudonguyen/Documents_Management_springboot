@@ -19,36 +19,47 @@ public class Document {
     @Column(name = "DOCUMENT_CODE", unique = true, length = 50)
     private String documentCode;
 
+    // Tiêu đề tài liệu
     @Column(name = "TITLE", nullable = false, length = 255)
     private String title;
 
+    // Trạng thái tài liệu (VD: Active, Expired, Pending, ...)
     @Column(name = "STATUS", length = 50)
     private String status;
 
+    // Ngày tạo tài liệu
     @Column(name = "CREATED_DATE")
     private LocalDate createdDate;
 
+    // Ngày diễn ra sự kiện hoặc ngày ban hành
     @Column(name = "EVENT_DATE")
     private LocalDate eventDate;
 
+    // ✅ Ngày hết hạn tài liệu
+    @Column(name = "EXPIRATION_DATE")
+    private LocalDate expirationDate;
+
+    // Ghi chú hoặc mô tả chi tiết (dạng văn bản dài)
     @Column(name = "NOTE", columnDefinition = "CLOB")
     private String note;
 
+    // Phòng ban hoặc đơn vị quản lý tài liệu
     @Column(name = "DEPARTMENT", length = 150)
     private String department;
 
+    // Khu vực hoặc phạm vi áp dụng của tài liệu
     @Column(name = "AREA", length = 150)
     private String area;
 
-    // Nhiều Documents thuộc về một Category
+    // Mối quan hệ: Nhiều Document thuộc về 1 Category
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_DOCUMENT_CATEGORY", referencedColumnName = "ID_DOCUMENT_CATEGORY")
-    @JsonBackReference // Ngăn vòng lặp vô hạn khi serialize JSON
+    @JsonBackReference // Ngăn vòng lặp vô hạn khi serialize JSON (Document ↔ Category)
     private DocumentCategory category;
 
-    // Một Document có thể có nhiều RequestDocuments (nếu có bảng này)
+    // Mối quan hệ: 1 Document có thể có nhiều RequestDocument (nếu có bảng này)
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore // Không cần trả về requestDocuments khi gọi API document
+    @JsonIgnore // Không trả danh sách RequestDocument khi gọi API Document
     private List<RequestDocument> requests;
 
     // =========================================================
@@ -57,13 +68,14 @@ public class Document {
     public Document() {}
 
     public Document(String title, DocumentCategory category, String department, String area,
-                    LocalDate createdDate, LocalDate eventDate, String note,
-                    String documentCode, String status) {
+                    LocalDate createdDate, LocalDate eventDate, LocalDate expirationDate,
+                    String note, String documentCode, String status) {
         this.documentCode = documentCode;
         this.title = title;
         this.status = status;
         this.createdDate = createdDate;
         this.eventDate = eventDate;
+        this.expirationDate = expirationDate;
         this.note = note;
         this.department = department;
         this.area = area;
@@ -119,6 +131,14 @@ public class Document {
 
     public void setEventDate(LocalDate eventDate) {
         this.eventDate = eventDate;
+    }
+
+    public LocalDate getExpirationDate() {
+        return expirationDate;
+    }
+
+    public void setExpirationDate(LocalDate expirationDate) {
+        this.expirationDate = expirationDate;
     }
 
     public String getNote() {

@@ -14,29 +14,33 @@ public class DocumentCategory {
     @Column(name = "ID_DOCUMENT_CATEGORY")
     private Long idDocumentCategory;
 
+    // Ký hiệu danh mục (ví dụ: QĐ, CV, HD...)
     @Column(name = "SIGN", nullable = false, length = 50)
     private String sign;
 
+    // Nội dung mô tả danh mục tài liệu
     @Column(name = "CONTENT", nullable = false, length = 255)
     private String content;
 
-    @Column(name = "DURATION", length = 100)
-    private String duration;
+    // Thời hạn lưu trữ (tính bằng năm)
+    @Column(name = "DURATION")
+    private Integer duration;
 
+    // Ghi chú thêm (nếu có)
     @Column(name = "NOTE", length = 255)
     private String note;
 
-    // One Category has many Documents
+    // Một danh mục có thể chứa nhiều tài liệu
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @JsonManagedReference // Giữ liên kết chính khi serialize JSON
+    @JsonManagedReference // Duy trì liên kết chính khi serialize JSON để tránh vòng lặp vô hạn
     private List<Document> documents = new ArrayList<>();
 
     // =========================================================
-    // CONSTRUCTORS
+    // CONSTRUCTORS — Hàm khởi tạo
     // =========================================================
     public DocumentCategory() {}
 
-    public DocumentCategory(String sign, String content, String duration, String note) {
+    public DocumentCategory(String sign, String content, Integer duration, String note) {
         this.sign = sign;
         this.content = content;
         this.duration = duration;
@@ -44,7 +48,7 @@ public class DocumentCategory {
     }
 
     // =========================================================
-    // GETTERS & SETTERS
+    // GETTERS & SETTERS — Các phương thức truy cập
     // =========================================================
     public Long getIdDocumentCategory() {
         return idDocumentCategory;
@@ -70,11 +74,11 @@ public class DocumentCategory {
         this.content = content;
     }
 
-    public String getDuration() {
+    public Integer getDuration() {
         return duration;
     }
 
-    public void setDuration(String duration) {
+    public void setDuration(Integer duration) {
         this.duration = duration;
     }
 
@@ -97,11 +101,13 @@ public class DocumentCategory {
     // =========================================================
     // QUẢN LÝ QUAN HỆ HAI CHIỀU
     // =========================================================
+    /** Thêm tài liệu vào danh mục */
     public void addDocument(Document document) {
         documents.add(document);
         document.setCategory(this);
     }
 
+    /** Xóa tài liệu khỏi danh mục */
     public void removeDocument(Document document) {
         documents.remove(document);
         document.setCategory(null);

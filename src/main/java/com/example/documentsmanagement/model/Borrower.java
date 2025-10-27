@@ -9,15 +9,21 @@ public class Borrower {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_borrower;
 
+    @Column(name = "full_name")
     private String fullName;
 
+    @Column(name = "department")
     private String department;
 
+    @Column(name = "position")
     private String position;
 
+    @Column(name = "id_card_number")
     private String idCardNumber;
 
+    @Column(name = "phone_number")
     private String phoneNumber;
+
 
     // Constructors
     public Borrower() {}

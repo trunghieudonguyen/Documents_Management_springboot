@@ -47,6 +47,7 @@ public class RequestDocumentService {
             existing.setLibrarian(incoming.getLibrarian());
             existing.setBorrower(incoming.getBorrower());
             existing.setDocument(incoming.getDocument());
+            existing.setReturnDate(incoming.getReturnDate());
             return repository.save(existing);
         });
     }

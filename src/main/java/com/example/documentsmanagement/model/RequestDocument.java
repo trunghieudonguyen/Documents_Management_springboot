@@ -12,6 +12,17 @@ public class RequestDocument {
     @Column(name = "ID_REQUEST_DOCUMENT")
     private Long idRequestDocument;
 
+    public LocalDate getReturnDate() {
+        return returnDate;
+    }
+
+    public void setReturnDate(LocalDate returnDate) {
+        this.returnDate = returnDate;
+    }
+
+    @Column(name = "RETURN_DATE")
+    private LocalDate returnDate;
+
     @Column(name = "DOCUMENT_NUMBER", length = 100)
     private String documentNumber;
 
