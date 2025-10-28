@@ -15,6 +15,8 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/document-extensions")
+@CrossOrigin(origins = "http://localhost:3000")
+
 public class DocumentDurationController {
 
     private final DocumentDurationService service;

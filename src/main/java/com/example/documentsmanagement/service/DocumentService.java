@@ -25,7 +25,7 @@ public class DocumentService {
     }
 
     // =========================================================
-    // 🔹 BASIC CRUD OPERATIONS
+    // BASIC CRUD OPERATIONS
     // =========================================================
 
     public List<Document> findAll() {
@@ -44,15 +44,15 @@ public class DocumentService {
     }
 
     // =========================================================
-    // 🔹 CREATE DOCUMENT — đảm bảo nạp đầy đủ category trước khi sinh mã
+    // CREATE DOCUMENT — đảm bảo nạp đầy đủ category trước khi sinh mã
     // =========================================================
     public Document create(Document document) {
-        // Ngày tạo mặc định
+        // Gán ngày tạo mặc định nếu frontend chưa gửi lên
         if (document.getCreatedDate() == null) {
             document.setCreatedDate(LocalDate.now());
         }
 
-        // Nạp đầy đủ DocumentCategory nếu chỉ có id được gửi lên
+        // Nạp đầy đủ DocumentCategory (nếu chỉ có id được gửi lên)
         if (document.getCategory() != null && document.getCategory().getIdDocumentCategory() != null) {
             Long categoryId = document.getCategory().getIdDocumentCategory();
             DocumentCategory fullCategory = categoryRepository.findById(categoryId)
@@ -60,24 +60,40 @@ public class DocumentService {
             document.setCategory(fullCategory);
         }
 
-        // Tính ngày hết hạn theo duration
+        // 🔹 3. Tính ngày hết hạn dựa vào duration (dưới dạng String)
         if (document.getCategory() != null && document.getCategory().getDuration() != null) {
-            document.setExpirationDate(document.getCreatedDate()
-                    .plusYears(document.getCategory().getDuration()));
+            String durationStr = document.getCategory().getDuration().trim().toLowerCase();
+
+            if (durationStr.contains("vĩnh viễn") || durationStr.contains("không giới hạn")) {
+                // Vĩnh viễn => không hết hạn
+                document.setExpirationDate(null);
+            } else {
+                try {
+                    int years = Integer.parseInt(durationStr);
+                    document.setExpirationDate(document.getCreatedDate().plusYears(years));
+                } catch (NumberFormatException e) {
+                    // Nếu duration không hợp lệ (ví dụ "3 năm" thay vì "3") => bỏ qua
+                    document.setExpirationDate(null);
+                }
+            }
+        } else {
+            // Nếu không có duration thì cũng đặt null
+            document.setExpirationDate(null);
         }
 
-        // Lưu để sinh ID
+        // Lưu lần đầu để sinh ID
         Document saved = repository.save(document);
 
-        // Sinh mã tài liệu tự động
+        // Sinh mã tài liệu tự động (dựa vào category, năm, phòng ban, khu vực...)
         saved.setDocumentCode(generateDocumentCode(saved));
 
-        // Lưu lại bản hoàn chỉnh
+        // Lưu lại bản hoàn chỉnh với mã
         return repository.save(saved);
     }
 
+
     // =========================================================
-    // 🔹 UPDATE DOCUMENT
+    // UPDATE DOCUMENT
     // =========================================================
     public Optional<Document> update(Long id, Document updatedData) {
         return repository.findById(id).map(existing -> {
@@ -98,9 +114,25 @@ public class DocumentService {
             }
 
             // Cập nhật ngày hết hạn
+            // 🔹 Cập nhật ngày hết hạn linh hoạt hơn
             if (existing.getCategory() != null && existing.getCategory().getDuration() != null) {
-                existing.setExpirationDate(existing.getCreatedDate()
-                        .plusYears(existing.getCategory().getDuration()));
+                String durationStr = existing.getCategory().getDuration().trim().toLowerCase();
+
+                try {
+                    // Nếu là số hoặc chứa ký tự "năm", chỉ lấy phần số
+                    durationStr = durationStr.replaceAll("[^0-9]", "");
+                    if (!durationStr.isEmpty()) {
+                        int years = Integer.parseInt(durationStr);
+                        existing.setExpirationDate(existing.getCreatedDate().plusYears(years));
+                    } else if (existing.getCategory().getDuration().contains("vĩnh viễn") ||
+                            existing.getCategory().getDuration().contains("không giới hạn")) {
+                        existing.setExpirationDate(null);
+                    } else {
+                        existing.setExpirationDate(null);
+                    }
+                } catch (Exception e) {
+                    existing.setExpirationDate(null);
+                }
             }
 
             // Sinh lại mã tài liệu

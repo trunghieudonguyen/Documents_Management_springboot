@@ -11,12 +11,13 @@ import java.util.Optional;
 import com.example.documentsmanagement.model.DocumentCategory;
 import com.example.documentsmanagement.service.DocumentCategoryService;
 
-    @RestController
-    @RequestMapping("/api/categories")
-    @CrossOrigin(origins = "http://localhost:3000") // cho phép frontend React truy cập
-    public class DocumentCategoryController {
+@RestController
+@RequestMapping("/api/categories")
+@CrossOrigin(origins = "http://localhost:3000") // cho phép frontend React truy cập
 
-        private final DocumentCategoryService service;
+public class DocumentCategoryController {
+
+    private final DocumentCategoryService service;
     @Autowired
 
     public DocumentCategoryController(DocumentCategoryService service) {

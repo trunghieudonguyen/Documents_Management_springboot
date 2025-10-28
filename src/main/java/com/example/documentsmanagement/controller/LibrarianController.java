@@ -10,6 +10,8 @@ import com.example.documentsmanagement.service.LibrarianService;
 
 @RestController
 @RequestMapping("/api/librarian")
+@CrossOrigin(origins = "http://localhost:3000")
+
 public class LibrarianController {
 
     private final LibrarianService service;

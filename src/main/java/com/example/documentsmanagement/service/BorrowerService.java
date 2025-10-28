@@ -30,19 +30,20 @@ public class BorrowerService {
     }
 
     public Borrower update(Long id, Borrower changes) {
-        // Basic update: ensure id is set on entity and save.
-        try {
-            java.lang.reflect.Field idField = changes.getClass().getDeclaredField("id_borrower");
-            idField.setAccessible(true);
-            Object val = idField.get(changes);
-            if (val == null) {
-                // Tham chiếu ID
-                idField.set(changes, id);
-            }
-        } catch (Exception ex) {
-            // Nếu tham chiếu không thành công, bỏ qua; repository.save vẫn hoạt động nếu thực thể có id được đặt
+        Optional<Borrower> existingOpt = repository.findById(id);
+        if (existingOpt.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy người mượn với ID: " + id);
         }
-        return repository.save(changes);
+
+        Borrower existing = existingOpt.get();
+        existing.setFullName(changes.getFullName());
+        existing.setDepartment(changes.getDepartment());
+        existing.setPosition(changes.getPosition());
+        existing.setIdCardNumber(changes.getIdCardNumber());
+        existing.setPhoneNumber(changes.getPhoneNumber());
+        existing.setEmployeeCode(changes.getEmployeeCode());
+
+        return repository.save(existing);
     }
 
     public void delete(Long id) {

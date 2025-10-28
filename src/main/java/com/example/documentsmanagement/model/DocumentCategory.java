@@ -21,13 +21,13 @@ public class DocumentCategory {
     @Column(name = "CONTENT", nullable = false, length = 255)
     private String content;
 
-    @Column(name = "DURATION")
-    private Integer duration;
+    @Column(name = "DURATION", length = 50)
+    private String duration; // 🔹 Đã đổi từ Integer -> String
 
     @Column(name = "NOTE", length = 255)
     private String note;
 
-    // Một Category có thể chứa nhiều Document
+    // 🔸 Một Category có thể chứa nhiều Document
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("category")
     private List<Document> documents = new ArrayList<>();
@@ -37,7 +37,7 @@ public class DocumentCategory {
     // ==========================
     public DocumentCategory() {}
 
-    public DocumentCategory(String sign, String content, Integer duration, String note) {
+    public DocumentCategory(String sign, String content, String duration, String note) {
         this.sign = sign;
         this.content = content;
         this.duration = duration;
@@ -71,11 +71,11 @@ public class DocumentCategory {
         this.content = content;
     }
 
-    public Integer getDuration() {
+    public String getDuration() {
         return duration;
     }
 
-    public void setDuration(Integer duration) {
+    public void setDuration(String duration) {
         this.duration = duration;
     }
 

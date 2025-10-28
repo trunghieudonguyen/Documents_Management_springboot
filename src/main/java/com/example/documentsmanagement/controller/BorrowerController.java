@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.example.documentsmanagement.model.Borrower;
 import com.example.documentsmanagement.service.BorrowerService;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/borrower")
 public class BorrowerController {

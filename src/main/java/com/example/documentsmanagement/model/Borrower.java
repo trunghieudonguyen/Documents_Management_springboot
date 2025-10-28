@@ -24,6 +24,17 @@ public class Borrower {
     @Column(name = "phone_number")
     private String phoneNumber;
 
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public void setEmployeeCode(String employeeCode) {
+        this.employeeCode = employeeCode;
+    }
+
+    @Column(name = "employee_code", unique = true)
+    private String employeeCode;
+
 
     // Constructors
     public Borrower() {}

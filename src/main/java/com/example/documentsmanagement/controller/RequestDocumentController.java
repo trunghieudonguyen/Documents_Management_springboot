@@ -11,6 +11,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/request-documents")
+@CrossOrigin(origins = "http://localhost:3000")
+
 public class RequestDocumentController {
 
     private final RequestDocumentService service;
