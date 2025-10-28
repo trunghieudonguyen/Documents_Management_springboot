@@ -42,7 +42,6 @@ public class BorrowerService {
         existing.setIdCardNumber(changes.getIdCardNumber());
         existing.setPhoneNumber(changes.getPhoneNumber());
         existing.setEmployeeCode(changes.getEmployeeCode());
-
         return repository.save(existing);
     }
 

@@ -22,7 +22,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 1️⃣ LẤY DANH SÁCH TOÀN BỘ TÀI LIỆU (có Category)
+    // LẤY DANH SÁCH TOÀN BỘ TÀI LIỆU (có Category)
     // =========================================================
     @GetMapping
     public ResponseEntity<List<Document>> getAllDocuments() {
@@ -33,7 +33,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 2️⃣ LẤY CHI TIẾT TÀI LIỆU THEO ID
+    // LẤY CHI TIẾT TÀI LIỆU THEO ID
     // =========================================================
     @GetMapping("/{id}")
     public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
@@ -44,7 +44,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 3️⃣ TẠO MỚI TÀI LIỆU (tự sinh mã documentCode)
+    // TẠO MỚI TÀI LIỆU (tự sinh mã documentCode)
     // =========================================================
     @PostMapping
     public ResponseEntity<?> createDocument(@RequestBody Document document) {
@@ -60,7 +60,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 4️⃣ CẬP NHẬT TÀI LIỆU THEO ID
+    // CẬP NHẬT TÀI LIỆU THEO ID
     // =========================================================
     @PutMapping("/{id}")
     public ResponseEntity<?> updateDocument(@PathVariable Long id, @RequestBody Document document) {
@@ -69,15 +69,15 @@ public class DocumentController {
             return updated
                     .<ResponseEntity<?>>map(ResponseEntity::ok)
                     .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body("❌ Không tìm thấy tài liệu có ID: " + id));
+                            .body("Không tìm thấy tài liệu có ID: " + id));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body("❌ Lỗi khi cập nhật tài liệu: " + e.getMessage());
+                    .body("Lỗi khi cập nhật tài liệu: " + e.getMessage());
         }
     }
 
     // =========================================================
-    // 5️⃣ XÓA TÀI LIỆU THEO ID
+    // XÓA TÀI LIỆU THEO ID
     // =========================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteDocument(@PathVariable Long id) {
@@ -88,12 +88,12 @@ public class DocumentController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body("❌ Không thể xóa tài liệu: " + e.getMessage());
+                    .body("Không thể xóa tài liệu: " + e.getMessage());
         }
     }
 
     // =========================================================
-    // 6️⃣ TÌM KIẾM TÀI LIỆU THEO TỪ KHÓA (title, code, status, dept, area)
+    // TÌM KIẾM TÀI LIỆU THEO TỪ KHÓA (title, code, status, dept, area)
     // =========================================================
     @GetMapping("/search")
     public ResponseEntity<List<Document>> searchDocuments(
@@ -106,7 +106,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 7️⃣ LỌC THEO TRẠNG THÁI
+    // LỌC THEO TRẠNG THÁI
     // =========================================================
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Document>> getByStatus(@PathVariable String status) {
@@ -117,7 +117,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 8️⃣ LỌC THEO PHÒNG BAN
+    // LỌC THEO PHÒNG BAN
     // =========================================================
     @GetMapping("/department/{department}")
     public ResponseEntity<List<Document>> getByDepartment(@PathVariable String department) {
@@ -128,7 +128,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 9️⃣ LỌC THEO DANH MỤC CATEGORY
+    // LỌC THEO DANH MỤC CATEGORY
     // =========================================================
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<Document>> getByCategory(@PathVariable Long categoryId) {
@@ -139,7 +139,7 @@ public class DocumentController {
     }
 
     // =========================================================
-    // 🔟 ĐẾM SỐ LƯỢNG TÀI LIỆU
+    // ĐẾM SỐ LƯỢNG TÀI LIỆU
     // =========================================================
     @GetMapping("/count")
     public ResponseEntity<Long> countDocuments() {

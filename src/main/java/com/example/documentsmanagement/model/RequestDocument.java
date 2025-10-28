@@ -3,6 +3,11 @@ package com.example.documentsmanagement.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.util.List;
+import java.util.ArrayList;
+
 @Entity
 @Table(name = "REQUEST_DOCUMENT")
 public class RequestDocument {
@@ -53,16 +58,20 @@ public class RequestDocument {
     private Borrower borrower;
 
     // 🔗 Thêm liên kết nhiều RequestDocuments thuộc về một Document
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "DOCUMENT_ID", referencedColumnName = "ID_DOCUMENT")
-    private Document document;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "REQUEST_DOCUMENT_ITEMS",
+            joinColumns = @JoinColumn(name = "ID_REQUEST_DOCUMENT"),
+            inverseJoinColumns = @JoinColumn(name = "ID_DOCUMENT")
+    )
+    private List<Document> documents = new ArrayList<>();
 
     // Constructors
     public RequestDocument() {}
 
     public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType,
                            LocalDate returnDeadline, int extensionCount, String signer,
-                           String attachmentPath, Librarian librarian, Borrower borrower, Document document) {
+                           String attachmentPath, Librarian librarian, Borrower borrower, List<Document> documents) {
         this.documentNumber = documentNumber;
         this.borrowDate = borrowDate;
         this.copyType = copyType;
@@ -72,7 +81,7 @@ public class RequestDocument {
         this.attachmentPath = attachmentPath;
         this.librarian = librarian;
         this.borrower = borrower;
-        this.document = document;
+        this.documents = documents;
     }
 
     // Getters & Setters
@@ -156,11 +165,12 @@ public class RequestDocument {
         this.borrower = borrower;
     }
 
-    public Document getDocument() {
-        return document;
+    @JsonIgnore
+    public List<Document> getDocuments() {
+        return documents;
     }
 
-    public void setDocument(Document document) {
-        this.document = document;
+    public void setDocuments(List<Document> documents) {
+        this.documents = documents;
     }
 }

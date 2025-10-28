@@ -60,7 +60,7 @@ public class DocumentService {
             document.setCategory(fullCategory);
         }
 
-        // 🔹 3. Tính ngày hết hạn dựa vào duration (dưới dạng String)
+        // 3. Tính ngày hết hạn dựa vào duration (dưới dạng String)
         if (document.getCategory() != null && document.getCategory().getDuration() != null) {
             String durationStr = document.getCategory().getDuration().trim().toLowerCase();
 
@@ -114,7 +114,6 @@ public class DocumentService {
             }
 
             // Cập nhật ngày hết hạn
-            // 🔹 Cập nhật ngày hết hạn linh hoạt hơn
             if (existing.getCategory() != null && existing.getCategory().getDuration() != null) {
                 String durationStr = existing.getCategory().getDuration().trim().toLowerCase();
 
@@ -143,27 +142,48 @@ public class DocumentService {
     }
 
     // =========================================================
-    // 🔹 MÃ TÀI LIỆU TỰ ĐỘNG
+    // MÃ TÀI LIỆU TỰ ĐỘNG
     // =========================================================
     private synchronized String generateDocumentCode(Document d) {
+        // Xác định phần tiền tố chính cho reset (chỉ dựa vào sign + year)
         String sign = (d.getCategory() != null && d.getCategory().getSign() != null)
                 ? d.getCategory().getSign().toUpperCase()
                 : "XX";
 
-        String year = (d.getCreatedDate() != null)
-                ? String.valueOf(d.getCreatedDate().getYear()).substring(2)
-                : String.valueOf(LocalDate.now().getYear()).substring(2);
+        LocalDate createdDate = (d.getCreatedDate() != null) ? d.getCreatedDate() : LocalDate.now();
+        String year = String.valueOf(createdDate.getYear()).substring(2); // lấy 2 số cuối năm
 
+        // phần bổ sung cho mã hiển thị
         String dept = formatDepartment(d.getDepartment());
         String area = formatArea(d.getArea());
 
-        String prefix = sign + year + dept + area;
+        // Prefix dùng cho truy vấn (chỉ sign + year)
+        String searchPrefix = sign + year;
 
-        String maxCode = repository.findMaxDocumentCodeByPrefix(prefix);
-        int nextNumber = extractNextNumber(maxCode, prefix);
+        // Prefix đầy đủ để hiển thị trong mã
+        String displayPrefix = sign + year + dept + area;
 
-        return prefix + String.format("%05d", nextNumber);
+        // Lấy mã lớn nhất dựa trên sign + year
+        String maxCode = repository.findMaxDocumentCodeByPrefix(searchPrefix);
+
+        int nextNumber = 1;
+        if (maxCode != null && !maxCode.isEmpty()) {
+            try {
+                // Tách phần số cuối cùng của mã lớn nhất
+                String numberPart = maxCode.replaceAll("\\D+", ""); // loại ký tự không phải số
+                if (!numberPart.isEmpty()) {
+                    nextNumber = Integer.parseInt(numberPart.substring(numberPart.length() - 5)) + 1;
+                }
+            } catch (Exception e) {
+                nextNumber = 1;
+            }
+        }
+
+        // Sinh mã mới
+        return displayPrefix + String.format("%05d", nextNumber);
     }
+
+
 
     private int extractNextNumber(String maxCode, String prefix) {
         if (maxCode == null || maxCode.isBlank()) return 1;
@@ -192,7 +212,7 @@ public class DocumentService {
     }
 
     // =========================================================
-    // 🔹 EXTRA UTILITIES
+    // EXTRA UTILITIES
     // =========================================================
     public List<Document> search(String keyword) {
         if (keyword == null || keyword.isBlank()) return repository.findAll();
