@@ -27,7 +27,7 @@ public class DocumentCategory {
     @Column(name = "NOTE", length = 255)
     private String note;
 
-    // 🔸 Một Category có thể chứa nhiều Document
+    // Một Category có thể chứa nhiều Document
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("category")
     private List<Document> documents = new ArrayList<>();

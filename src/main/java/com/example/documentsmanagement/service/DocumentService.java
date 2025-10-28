@@ -25,7 +25,7 @@ public class DocumentService {
     }
 
     // =========================================================
-    // BASIC CRUD OPERATIONS
+    // 🔹 BASIC CRUD OPERATIONS
     // =========================================================
 
     public List<Document> findAll() {
@@ -44,7 +44,7 @@ public class DocumentService {
     }
 
     // =========================================================
-    // CREATE DOCUMENT — đảm bảo nạp đầy đủ category trước khi sinh mã
+    // 🔹 CREATE DOCUMENT — đảm bảo nạp đầy đủ category trước khi sinh mã
     // =========================================================
     public Document create(Document document) {
         // Gán ngày tạo mặc định nếu frontend chưa gửi lên
