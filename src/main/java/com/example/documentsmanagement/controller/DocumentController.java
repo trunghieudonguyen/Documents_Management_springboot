@@ -11,123 +11,137 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/documents")
-@CrossOrigin(origins = "*") // Cho phép gọi API từ bất kỳ frontend nào
+@CrossOrigin(origins = "*") // Cho phép frontend truy cập từ bất kỳ domain nào
 public class DocumentController {
 
-    private final DocumentService service;
+    private final DocumentService documentService;
 
-    public DocumentController(DocumentService service) {
-        this.service = service;
+    public DocumentController(DocumentService documentService) {
+        this.documentService = documentService;
     }
 
     // =========================================================
-    // LẤY DANH SÁCH TOÀN BỘ TÀI LIỆU
+    // 1️⃣ LẤY DANH SÁCH TOÀN BỘ TÀI LIỆU (có Category)
     // =========================================================
     @GetMapping
-    public ResponseEntity<List<Document>> getAll() {
-        List<Document> documents = service.findAll();
-        if (documents.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(documents);
+    public ResponseEntity<List<Document>> getAllDocuments() {
+        List<Document> documents = documentService.findAll();
+        return documents.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(documents);
     }
 
     // =========================================================
-    // LẤY CHI TIẾT TÀI LIỆU THEO ID
+    // 2️⃣ LẤY CHI TIẾT TÀI LIỆU THEO ID
     // =========================================================
     @GetMapping("/{id}")
-    public ResponseEntity<Document> getById(@PathVariable Long id) {
-        Optional<Document> document = service.findById(id);
-        return document.map(ResponseEntity::ok)
+    public ResponseEntity<Document> getDocumentById(@PathVariable Long id) {
+        Optional<Document> document = documentService.findById(id);
+        return document
+                .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // =========================================================
-    // TẠO MỚI TÀI LIỆU (tự sinh mã documentCode)
+    // 3️⃣ TẠO MỚI TÀI LIỆU (tự sinh mã documentCode)
     // =========================================================
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Document document) {
+    public ResponseEntity<?> createDocument(@RequestBody Document document) {
         try {
-            Document created = service.create(document);
+            Document created = documentService.create(document);
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Đã xảy ra lỗi khi tạo tài liệu: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("❌ Lỗi khi tạo tài liệu: " + e.getMessage());
         }
     }
 
     // =========================================================
-    // CẬP NHẬT TÀI LIỆU THEO ID
+    // 4️⃣ CẬP NHẬT TÀI LIỆU THEO ID
     // =========================================================
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Document document) {
-        Optional<Document> updated = service.update(id, document);
-        return updated
-                .<ResponseEntity<?>>map(doc -> ResponseEntity.ok(doc))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Không tìm thấy tài liệu có ID: " + id));
+    public ResponseEntity<?> updateDocument(@PathVariable Long id, @RequestBody Document document) {
+        try {
+            Optional<Document> updated = documentService.update(id, document);
+            return updated
+                    .<ResponseEntity<?>>map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body("❌ Không tìm thấy tài liệu có ID: " + id));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body("❌ Lỗi khi cập nhật tài liệu: " + e.getMessage());
+        }
     }
 
     // =========================================================
-    // XÓA TÀI LIỆU THEO ID
+    // 5️⃣ XÓA TÀI LIỆU THEO ID
     // =========================================================
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<?> deleteDocument(@PathVariable Long id) {
         try {
-            service.delete(id);
+            documentService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Không thể xóa tài liệu: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("❌ Không thể xóa tài liệu: " + e.getMessage());
         }
     }
 
     // =========================================================
-    // TÌM KIẾM TÀI LIỆU THEO TỪ KHÓA (title, code, status, dept, area)
+    // 6️⃣ TÌM KIẾM TÀI LIỆU THEO TỪ KHÓA (title, code, status, dept, area)
     // =========================================================
     @GetMapping("/search")
-    public ResponseEntity<List<Document>> search(
-            @RequestParam(value = "q", required = false, defaultValue = "") String q) {
-        List<Document> results = service.search(q);
-        if (results.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(results);
+    public ResponseEntity<List<Document>> searchDocuments(
+            @RequestParam(value = "q", required = false, defaultValue = "") String keyword) {
+
+        List<Document> results = documentService.search(keyword);
+        return results.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(results);
     }
 
     // =========================================================
-    // LẤY TỔNG SỐ LƯỢNG TÀI LIỆU
-    // =========================================================
-    @GetMapping("/count")
-    public ResponseEntity<Long> count() {
-        return ResponseEntity.ok(service.count());
-    }
-
-    // =========================================================
-    // LỌC THEO TRẠNG THÁI
+    // 7️⃣ LỌC THEO TRẠNG THÁI
     // =========================================================
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Document>> findByStatus(@PathVariable String status) {
-        List<Document> docs = service.findByStatus(status);
-        if (docs.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(docs);
+    public ResponseEntity<List<Document>> getByStatus(@PathVariable String status) {
+        List<Document> docs = documentService.findByStatus(status);
+        return docs.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(docs);
     }
 
     // =========================================================
-    // LỌC THEO PHÒNG BAN
+    // 8️⃣ LỌC THEO PHÒNG BAN
     // =========================================================
     @GetMapping("/department/{department}")
-    public ResponseEntity<List<Document>> findByDepartment(@PathVariable String department) {
-        List<Document> docs = service.findByDepartment(department);
-        if (docs.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(docs);
+    public ResponseEntity<List<Document>> getByDepartment(@PathVariable String department) {
+        List<Document> docs = documentService.findByDepartment(department);
+        return docs.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(docs);
+    }
+
+    // =========================================================
+    // 9️⃣ LỌC THEO DANH MỤC CATEGORY
+    // =========================================================
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Document>> getByCategory(@PathVariable Long categoryId) {
+        List<Document> docs = documentService.findByCategoryId(categoryId);
+        return docs.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(docs);
+    }
+
+    // =========================================================
+    // 🔟 ĐẾM SỐ LƯỢNG TÀI LIỆU
+    // =========================================================
+    @GetMapping("/count")
+    public ResponseEntity<Long> countDocuments() {
+        return ResponseEntity.ok(documentService.count());
     }
 }

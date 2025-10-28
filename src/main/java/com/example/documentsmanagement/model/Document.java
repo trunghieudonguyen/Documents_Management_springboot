@@ -1,13 +1,13 @@
 package com.example.documentsmanagement.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Table(name = "DOCUMENT")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ngăn lỗi khi serialize entity lazy
 public class Document {
 
     @Id
@@ -15,56 +15,48 @@ public class Document {
     @Column(name = "ID_DOCUMENT")
     private Long idDocument;
 
-    // Mã tài liệu (duy nhất, có thể null khi tạo mới)
+    // Mã tài liệu (có thể null khi mới tạo)
     @Column(name = "DOCUMENT_CODE", unique = true, length = 50)
     private String documentCode;
 
-    // Tiêu đề tài liệu
     @Column(name = "TITLE", nullable = false, length = 255)
     private String title;
 
-    // Trạng thái tài liệu (VD: Active, Expired, Pending, ...)
     @Column(name = "STATUS", length = 50)
     private String status;
 
-    // Ngày tạo tài liệu
     @Column(name = "CREATED_DATE")
     private LocalDate createdDate;
 
-    // Ngày diễn ra sự kiện hoặc ngày ban hành
     @Column(name = "EVENT_DATE")
     private LocalDate eventDate;
 
-    // ✅ Ngày hết hạn tài liệu
     @Column(name = "EXPIRATION_DATE")
     private LocalDate expirationDate;
 
-    // Ghi chú hoặc mô tả chi tiết (dạng văn bản dài)
     @Column(name = "NOTE", columnDefinition = "CLOB")
     private String note;
 
-    // Phòng ban hoặc đơn vị quản lý tài liệu
     @Column(name = "DEPARTMENT", length = 150)
     private String department;
 
-    // Khu vực hoặc phạm vi áp dụng của tài liệu
     @Column(name = "AREA", length = 150)
     private String area;
 
-    // Mối quan hệ: Nhiều Document thuộc về 1 Category
-    @ManyToOne(fetch = FetchType.LAZY)
+    // Nhiều Document thuộc về 1 Category
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_DOCUMENT_CATEGORY", referencedColumnName = "ID_DOCUMENT_CATEGORY")
-    @JsonBackReference // Ngăn vòng lặp vô hạn khi serialize JSON (Document ↔ Category)
+    @JsonIgnoreProperties("documents") // Ngăn vòng lặp vô hạn khi trả về JSON
     private DocumentCategory category;
 
-    // Mối quan hệ: 1 Document có thể có nhiều RequestDocument (nếu có bảng này)
+    // Một Document có thể có nhiều RequestDocument (nếu bạn dùng bảng này)
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore // Không trả danh sách RequestDocument khi gọi API Document
+    @JsonIgnoreProperties("document")
     private List<RequestDocument> requests;
 
-    // =========================================================
-    // CONSTRUCTORS
-    // =========================================================
+    // ==========================
+    // Constructors
+    // ==========================
     public Document() {}
 
     public Document(String title, DocumentCategory category, String department, String area,
@@ -82,9 +74,9 @@ public class Document {
         this.category = category;
     }
 
-    // =========================================================
-    // GETTERS & SETTERS
-    // =========================================================
+    // ==========================
+    // Getters & Setters
+    // ==========================
     public Long getIdDocument() {
         return idDocument;
     }

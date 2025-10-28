@@ -11,7 +11,10 @@ import java.util.List;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    /** 🔍 Tìm kiếm toàn văn (title, code, department, area, status) */
+    // =========================================================
+    // 🔍 TÌM KIẾM TOÀN VĂN (title, code, department, area, status)
+    // Không phân biệt hoa thường
+    // =========================================================
     @Query("""
         SELECT d FROM Document d
         WHERE LOWER(d.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -22,20 +25,36 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     """)
     List<Document> searchByKeyword(@Param("keyword") String keyword);
 
-    /** 🔹 Lọc theo trạng thái */
+    // =========================================================
+    // 🔹 LỌC THEO TRẠNG THÁI
+    // =========================================================
     List<Document> findByStatus(String status);
 
-    /** 🔹 Lọc theo phòng ban */
+    // =========================================================
+    // 🔹 LỌC THEO PHÒNG BAN
+    // =========================================================
     List<Document> findByDepartment(String department);
 
-    /** 🔹 Lọc theo danh mục (DocumentCategory) */
-    @Query("SELECT d FROM Document d WHERE d.category.idDocumentCategory = :categoryId")
-    List<Document> findByCategoryId(@Param("categoryId") Long categoryId);
+    // =========================================================
+    // 🔹 LỌC THEO DANH MỤC (Category)
+    // Tự động nối quan hệ @ManyToOne(category)
+    // =========================================================
+    List<Document> findByCategory_IdDocumentCategory(Long categoryId);
 
-    /** ⚡ Lấy mã Document lớn nhất theo prefix (để sinh mã tự động) */
-    @Query("SELECT MAX(d.documentCode) FROM Document d WHERE d.documentCode LIKE CONCAT(:prefix, '%')")
+    // =========================================================
+    // ⚡ LẤY MÃ DOCUMENT LỚN NHẤT THEO PREFIX (phục vụ sinh mã tự động)
+    // Nên tạo index cho cột DOCUMENT_CODE để tối ưu:
+    // CREATE INDEX idx_document_code ON DOCUMENT (DOCUMENT_CODE);
+    // =========================================================
+    @Query("""
+        SELECT MAX(d.documentCode)
+        FROM Document d
+        WHERE d.documentCode LIKE CONCAT(:prefix, '%')
+    """)
     String findMaxDocumentCodeByPrefix(@Param("prefix") String prefix);
 
-    /** 🔹 Kiểm tra trùng mã tài liệu */
+    // =========================================================
+    // 🔹 KIỂM TRA MÃ DOCUMENT TRÙNG
+    // =========================================================
     boolean existsByDocumentCode(String documentCode);
 }

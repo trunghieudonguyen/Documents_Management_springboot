@@ -175,6 +175,10 @@ public class DocumentService {
         return repository.findByDepartment(department);
     }
 
+    public List<Document> findByCategoryId(Long categoryId) {
+        return repository.findByCategory_IdDocumentCategory(categoryId);
+    }
+
     public Long count() {
         return repository.count();
     }
