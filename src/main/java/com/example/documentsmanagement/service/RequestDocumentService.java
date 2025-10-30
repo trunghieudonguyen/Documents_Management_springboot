@@ -4,13 +4,10 @@ import com.example.documentsmanagement.model.RequestDocument;
 import com.example.documentsmanagement.repository.RequestDocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-=======
+
 import com.example.documentsmanagement.model.Borrower;
 import com.example.documentsmanagement.repository.BorrowerRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.hibernate.Hibernate;
->>>>>>> origin/main
 
 import java.util.List;
 import java.util.Optional;
@@ -26,12 +23,6 @@ public class RequestDocumentService {
 
     private final RequestDocumentRepository repository;
     private final DocumentRepository documentRepository;
-
-<<<<<<< HEAD
-    public RequestDocumentService(RequestDocumentRepository repository, DocumentRepository documentRepository) {
-        this.repository = repository;
-        this.documentRepository = documentRepository;
-=======
     private final BorrowerRepository borrowerRepository;
 
     public RequestDocumentService(RequestDocumentRepository repository,
@@ -40,7 +31,6 @@ public class RequestDocumentService {
         this.repository = repository;
         this.documentRepository = documentRepository;
         this.borrowerRepository = borrowerRepository;
->>>>>>> origin/main
     }
 
     // Lấy toàn bộ danh sách
@@ -66,10 +56,6 @@ public class RequestDocumentService {
 
     // Thêm mới yêu cầu mượn tài liệu
     public RequestDocument create(RequestDocument requestDocument) {
-<<<<<<< HEAD
-        requestDocument.setIdRequestDocument(null); // đảm bảo tạo mới
-        hydrateDocuments(requestDocument);
-=======
         requestDocument.setIdRequestDocument(null);
 
         // --- Xử lý Borrower ---
@@ -104,26 +90,13 @@ public class RequestDocumentService {
 
         hydrateDocuments(requestDocument);
 
->>>>>>> origin/main
         return repository.save(requestDocument);
     }
 
     // Cập nhật yêu cầu mượn
     public Optional<RequestDocument> update(Long id, RequestDocument incoming) {
         return repository.findById(id).map(existing -> {
-<<<<<<< HEAD
-            existing.setDocumentNumber(incoming.getDocumentNumber());
-            existing.setBorrowDate(incoming.getBorrowDate());
-            existing.setCopyType(incoming.getCopyType());
-            existing.setReturnDeadline(incoming.getReturnDeadline());
-            existing.setExtensionCount(incoming.getExtensionCount());
-            existing.setSigner(incoming.getSigner());
-            existing.setAttachmentPath(incoming.getAttachmentPath());
-            existing.setLibrarian(incoming.getLibrarian());
-            existing.setBorrower(incoming.getBorrower());
-            existing.setDocuments(incoming.getDocuments());
-            existing.setReturnDate(incoming.getReturnDate());
-=======
+
             if (incoming.getReturnDeadline() != null) existing.setReturnDeadline(incoming.getReturnDeadline());
             existing.setExtensionCount(incoming.getExtensionCount());
             if (incoming.getReturnDate() != null) existing.setReturnDate(incoming.getReturnDate());
@@ -152,7 +125,6 @@ public class RequestDocumentService {
                 existing.setNote(incoming.getNote());
             }
 
->>>>>>> origin/main
             return repository.save(existing);
         });
     }
