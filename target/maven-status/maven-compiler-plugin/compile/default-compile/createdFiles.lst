@@ -1,0 +1,10 @@
+com\example\documentsmanagement\model\PersonDocument.class
+com\example\documentsmanagement\model\Document.class
+com\example\documentsmanagement\model\Librarian.class
+com\example\documentsmanagement\config\FrontendController.class
+com\example\documentsmanagement\model\Borrower.class
+com\example\documentsmanagement\model\CaseDocument.class
+com\example\documentsmanagement\model\DocumentCategory.class
+com\example\documentsmanagement\model\RequestDocument.class
+com\example\documentsmanagement\model\DocumentSet.class
+com\example\documentsmanagement\DocumentsManagementApplication.class

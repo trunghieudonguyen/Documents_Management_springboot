@@ -1,0 +1,83 @@
+package com.example.documentsmanagement.service;
+
+import com.example.documentsmanagement.model.Document;
+import com.example.documentsmanagement.model.Notification;
+import com.example.documentsmanagement.repository.DocumentRepository;
+import com.example.documentsmanagement.repository.NotificationRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class NotificationService {
+
+    private final NotificationRepository notificationRepository;
+    private final DocumentRepository documentRepository;
+
+    public NotificationService(NotificationRepository notificationRepository, DocumentRepository documentRepository) {
+        this.notificationRepository = notificationRepository;
+        this.documentRepository = documentRepository;
+    }
+
+    // Lấy thông báo 1 tháng gần đây
+    public List<Notification> getRecentNotifications() {
+        LocalDate today = LocalDate.now();
+        LocalDate oneMonthAgo = today.minusMonths(1);
+        return notificationRepository.findByCreateDateBetween(oneMonthAgo, today);
+    }
+
+    @Transactional
+    public Notification updateNotification(Long id, Notification updatedNotification) {
+        Optional<Notification> optional = notificationRepository.findById(id);
+        if (optional.isEmpty()) {
+            throw new RuntimeException("Notification not found with id: " + id);
+        }
+
+        Notification notification = optional.get();
+        // cập nhật các trường bạn muốn
+        notification.setContent(updatedNotification.getContent());
+        notification.setStatus(updatedNotification.getStatus());
+        notification.setIsRead(updatedNotification.getIsRead());
+
+        return notificationRepository.save(notification);
+    }
+
+    // Scheduler kiểm tra document sắp hết hạn và tạo notification
+    @Scheduled(cron = "0 30 8 * * ?") // Chạy mỗi ngày 8h30 sáng
+    public void notifyExpiringDocuments() {
+        LocalDate today = LocalDate.now();
+        LocalDate in7Days = today.plusDays(7);
+
+        //Tạo thông báo hồ sơ sắp hết hạn
+        List<Document> expiringDocs = documentRepository.findByExpirationDateBetween(today, in7Days);
+        for (Document doc : expiringDocs) {
+            long daysLeft = ChronoUnit.DAYS.between(today, doc.getExpirationDate()); // tính số ngày còn lại
+
+            Notification notification = new Notification();
+            notification.setContent(
+                    "Hồ sơ " + doc.getTitle() + " hết hạn ngày " + doc.getExpirationDate()
+                            + " (còn " + daysLeft + " ngày)"
+            );
+            notification.setStatus("Sắp hết hạn");
+            notification.setIsRead(false);
+            notification.setCreateDate(today);
+            notificationRepository.save(notification);
+        }
+
+        //Tạo thông báo hồ sơ hết hạn
+        List<Document> expiredDocs = documentRepository.findByExpirationDateBefore(today.plusDays(1));
+        for (Document doc : expiredDocs) {
+            Notification notification = new Notification();
+            notification.setContent("Hồ sơ " + doc.getTitle() + " đã hết hạn (ngày hết hạn: " + doc.getExpirationDate() + ")");
+            notification.setStatus("Đã hết hạn");
+            notification.setIsRead(false); // luôn tạo mới mỗi ngày
+            notification.setCreateDate(today);
+            notificationRepository.save(notification);
+        }
+    }
+}
