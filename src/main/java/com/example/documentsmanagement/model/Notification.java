@@ -26,16 +26,20 @@ public class Notification {
     @Column(name = "STATUS", length = 255)
     private String status;
 
+    @Column(name = "TYPE", length = 255)
+    private String type;
+
     // ==========================
     // Constructors
     // ==========================
     public Notification() {}
 
-    public Notification(String content, LocalDate createDate, Boolean isRead, String status) {
+    public Notification(String content, LocalDate createDate, Boolean isRead, String status,  String type) {
         this.content = content;
         this.createDate = createDate;
         this.isRead = isRead;
         this.status = status;
+        this.type = type;
     }
 
     // ==========================
@@ -81,4 +85,7 @@ public class Notification {
         this.status = status;
     }
 
+    public String getType() {return type;}
+
+    public void setType(String type) {this.type = type;}
 }

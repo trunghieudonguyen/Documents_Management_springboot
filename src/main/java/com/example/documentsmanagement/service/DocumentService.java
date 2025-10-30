@@ -2,6 +2,7 @@ package com.example.documentsmanagement.service;
 
 import com.example.documentsmanagement.model.Document;
 import com.example.documentsmanagement.model.DocumentCategory;
+import com.example.documentsmanagement.repository.DocumentCategoryRepository;
 import com.example.documentsmanagement.repository.DocumentRepository;
 import com.example.documentsmanagement.repository.DocumentCategoryRepository;
 import jakarta.transaction.Transactional;
@@ -25,6 +26,7 @@ public class DocumentService {
     }
 
     // =========================================================
+
     // BASIC CRUD OPERATIONS
     // =========================================================
 
@@ -44,6 +46,7 @@ public class DocumentService {
     }
 
     // =========================================================
+
     // CREATE DOCUMENT — đảm bảo nạp đầy đủ category trước khi sinh mã
     // =========================================================
     public Document create(Document document) {

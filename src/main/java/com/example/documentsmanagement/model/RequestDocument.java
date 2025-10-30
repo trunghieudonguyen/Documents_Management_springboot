@@ -68,9 +68,6 @@ public class RequestDocument {
 
     @Column(name = "NOTE", columnDefinition = "CLOB")
     private String note;
-
-
-
     // Constructors
     public RequestDocument() {}
 

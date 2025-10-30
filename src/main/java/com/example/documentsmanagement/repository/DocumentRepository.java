@@ -26,11 +26,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     """)
     List<Document> searchByKeyword(@Param("keyword") String keyword);
 
-    // Lấy danh sách document sắp hết hạn trong khoảng ngày và hết hạn
-    List<Document> findByExpirationDateBetween(LocalDate start, LocalDate end);
-    List<Document> findByExpirationDateBefore(LocalDate date);
-
-
     List<Document> findByStatus(String status);
 
 
@@ -39,6 +34,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     List<Document> findByCategory_IdDocumentCategory(Long categoryId);
 
+    // Lấy danh sách document sắp hết hạn trong khoảng ngày và hết hạn
+    List<Document> findByExpirationDateBetween(LocalDate start, LocalDate end);
+    List<Document> findByExpirationDateBefore(LocalDate date);
 
     @Query("""
         SELECT MAX(d.documentCode)

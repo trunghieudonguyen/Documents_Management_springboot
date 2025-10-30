@@ -5,7 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import com.example.documentsmanagement.model.Borrower;
 import java.util.List;
+
 import java.util.Optional;
+
 
 public interface BorrowerRepository extends JpaRepository<Borrower, Long> {
 
@@ -16,5 +18,6 @@ public interface BorrowerRepository extends JpaRepository<Borrower, Long> {
     """)
 
     List<Borrower> searchByName(@Param("q") String q);
+
     Optional<Borrower> findByEmployeeCode(String employeeCode);
 }
