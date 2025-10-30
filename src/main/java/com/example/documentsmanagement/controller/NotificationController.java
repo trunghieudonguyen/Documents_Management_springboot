@@ -31,4 +31,8 @@ public class NotificationController {
     ) {
         return notificationService.updateNotification(id, updatedNotification);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

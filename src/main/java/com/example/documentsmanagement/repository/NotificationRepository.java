@@ -21,4 +21,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
     // Lấy thông báo trong khoảng ngày
     List<Notification> findByCreateDateBetween(LocalDate startDate, LocalDate endDate);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

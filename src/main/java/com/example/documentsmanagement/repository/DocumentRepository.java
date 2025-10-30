@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+<<<<<<< HEAD
+=======
+import java.time.LocalDate;
+>>>>>>> origin/main
 import java.util.List;
 
 @Repository
@@ -38,6 +42,7 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     List<Document> findByCategory_IdDocumentCategory(Long categoryId);
 
+<<<<<<< HEAD
     // Lấy danh sách document sắp hết hạn trong khoảng ngày và hết hạn
     List<Document> findByExpirationDateBetween(LocalDate start, LocalDate end);
     List<Document> findByExpirationDateBefore(LocalDate date);
@@ -46,6 +51,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     // Nên tạo index cho cột DOCUMENT_CODE để tối ưu:
     // CREATE INDEX idx_document_code ON DOCUMENT (DOCUMENT_CODE);
     // =========================================================
+=======
+
+>>>>>>> origin/main
     @Query("""
         SELECT MAX(d.documentCode)
         FROM Document d

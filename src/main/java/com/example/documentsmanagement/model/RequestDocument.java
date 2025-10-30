@@ -66,6 +66,14 @@ public class RequestDocument {
     )
     private List<Document> documents = new ArrayList<>();
 
+<<<<<<< HEAD
+=======
+    @Column(name = "NOTE", columnDefinition = "CLOB")
+    private String note;
+
+
+
+>>>>>>> origin/main
     // Constructors
     public RequestDocument() {}
 
@@ -165,6 +173,17 @@ public class RequestDocument {
         this.borrower = borrower;
     }
 
+<<<<<<< HEAD
+=======
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+>>>>>>> origin/main
     @JsonIgnore
     public List<Document> getDocuments() {
         return documents;

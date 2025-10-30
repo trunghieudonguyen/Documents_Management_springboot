@@ -81,4 +81,8 @@ public class Notification {
         this.status = status;
     }
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main
