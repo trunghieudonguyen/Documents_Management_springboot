@@ -8,14 +8,21 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.documentsmanagement.model.Document;
+import com.example.documentsmanagement.repository.DocumentRepository;
+
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 public class RequestDocumentService {
 
     private final RequestDocumentRepository repository;
+    private final DocumentRepository documentRepository;
 
-    public RequestDocumentService(RequestDocumentRepository repository) {
+    public RequestDocumentService(RequestDocumentRepository repository, DocumentRepository documentRepository) {
         this.repository = repository;
+        this.documentRepository = documentRepository;
     }
 
     // Lấy toàn bộ danh sách
@@ -28,9 +35,21 @@ public class RequestDocumentService {
         return repository.findById(id);
     }
 
+    private void hydrateDocuments(RequestDocument requestDocument) {
+        if (requestDocument.getDocuments() != null) {
+            List<Long> docIds = requestDocument.getDocuments().stream()
+                    .map(Document::getIdDocument)
+                    .collect(Collectors.toList());
+
+            List<Document> fullDocuments = documentRepository.findAllById(docIds);
+            requestDocument.setDocuments(fullDocuments);
+        }
+    }
+
     // Thêm mới yêu cầu mượn tài liệu
     public RequestDocument create(RequestDocument requestDocument) {
         requestDocument.setIdRequestDocument(null); // đảm bảo tạo mới
+        hydrateDocuments(requestDocument);
         return repository.save(requestDocument);
     }
 
@@ -46,7 +65,7 @@ public class RequestDocumentService {
             existing.setAttachmentPath(incoming.getAttachmentPath());
             existing.setLibrarian(incoming.getLibrarian());
             existing.setBorrower(incoming.getBorrower());
-            existing.setDocument(incoming.getDocument());
+            existing.setDocuments(incoming.getDocuments());
             existing.setReturnDate(incoming.getReturnDate());
             return repository.save(existing);
         });

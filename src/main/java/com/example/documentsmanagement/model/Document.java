@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "DOCUMENT")
@@ -50,9 +52,9 @@ public class Document {
     private DocumentCategory category;
 
     // Một Document có thể có nhiều RequestDocument (nếu bạn dùng bảng này)
-    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ManyToMany(mappedBy = "documents")
     @JsonIgnoreProperties("document")
-    private List<RequestDocument> requests;
+    private List<RequestDocument> requests = new ArrayList<>();
 
     // ==========================
     // Constructors
@@ -165,6 +167,7 @@ public class Document {
         this.category = category;
     }
 
+    @JsonIgnore
     public List<RequestDocument> getRequests() {
         return requests;
     }

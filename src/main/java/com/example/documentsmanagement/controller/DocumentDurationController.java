@@ -9,10 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 
-/**
- * REST controller for managing DocumentDuration entities.
- * Provides endpoints for creating, reading, updating, and deleting document extensions.
- */
 @RestController
 @RequestMapping("/api/document-extensions")
 @CrossOrigin(origins = "http://localhost:3000")
