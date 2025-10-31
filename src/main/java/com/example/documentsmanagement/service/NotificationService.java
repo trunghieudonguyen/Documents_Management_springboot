@@ -57,11 +57,12 @@ public class NotificationService {
     @Scheduled(cron = "0 30 8 * * ?") // Chạy mỗi ngày 8h30 sáng
     public void notifyExpiringDocuments() {
         LocalDate today = LocalDate.now();
+        LocalDate in1Day = today.plusDays(1);
         LocalDate in3Days = today.plusDays(3);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         //Tạo thông báo hồ sơ sắp hết hạn
-        List<Document> expiringDocs = documentRepository.findByExpirationDateBetween(today, in3Days);
+        List<Document> expiringDocs = documentRepository.findByExpirationDateBetween(in1Day, in3Days);
         for (Document doc : expiringDocs) {
             long daysLeft = ChronoUnit.DAYS.between(today, doc.getExpirationDate()); // tính số ngày còn lại
 
@@ -90,7 +91,7 @@ public class NotificationService {
         }
 
         //Tạo thông báo hồ sơ sắp hết hạn
-        List<RequestDocument> expiringRequestDocuments = requestDocumentRepository.findByReturnDeadlineBetween(today, in3Days);
+        List<RequestDocument> expiringRequestDocuments = requestDocumentRepository.findByReturnDeadlineBetween(in1Day, in3Days);
         for (RequestDocument requestDocument : expiringRequestDocuments) {
             long daysLeft = ChronoUnit.DAYS.between(today, requestDocument.getReturnDeadline()); // tính số ngày còn lại
 
