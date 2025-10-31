@@ -2,6 +2,7 @@ package com.example.documentsmanagement.service;
 
 import com.example.documentsmanagement.model.RequestDocument;
 import com.example.documentsmanagement.repository.RequestDocumentRepository;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +86,19 @@ public class RequestDocumentService {
         } else {
             throw new IllegalArgumentException("Thiếu thông tin người mượn (Borrower).");
         }
+
+        // --- Cập nhật trạng thái document ---
+        boolean isOriginalBorrow = "original".equalsIgnoreCase(requestDocument.getCopyType());
+
+        if (isOriginalBorrow) {
+            if (requestDocument.getDocuments() != null) {
+                for (Document doc : requestDocument.getDocuments()) {
+                    doc.setStatus("Đã mượn");
+                    documentRepository.save(doc);
+                }
+            }
+        }
+
         requestDocument.setBorrower(borrowerToSave);
         requestDocument.setNote(requestDocument.getNote());
 
@@ -123,6 +137,23 @@ public class RequestDocumentService {
 
             if (incoming.getNote() != null || existing.getNote() != null) {
                 existing.setNote(incoming.getNote());
+            }
+
+            boolean isCompleting = (incoming.getReturnDate() != null && existing.getReturnDate() == null);
+
+            if (isCompleting) {
+                String copyType = existing.getCopyType();
+
+                if ("original".equalsIgnoreCase(copyType)) {
+                    Hibernate.initialize(existing.getDocuments());
+
+                    if (existing.getDocuments() != null) {
+                        for (Document doc : existing.getDocuments()) {
+                            doc.setStatus("Đang lưu trữ");
+                            documentRepository.save(doc);
+                        }
+                    }
+                }
             }
 
             return repository.save(existing);

@@ -1,5 +1,6 @@
 package com.example.documentsmanagement.model;
 import jakarta.persistence.*;
+import com.example.documentsmanagement.util.PasswordUtil;
 
 @Entity
 @Table(name = "librarian")

@@ -2,6 +2,7 @@ package com.example.documentsmanagement.service;
 
 import com.example.documentsmanagement.model.Document;
 import com.example.documentsmanagement.model.DocumentCategory;
+import com.example.documentsmanagement.repository.DocumentCategoryRepository;
 import com.example.documentsmanagement.repository.DocumentRepository;
 import com.example.documentsmanagement.repository.DocumentCategoryRepository;
 import jakarta.transaction.Transactional;
