@@ -1,5 +1,6 @@
 package com.example.documentsmanagement.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class DocumentCategory {
 
     // 🔸 Một Category có thể chứa nhiều Document
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     @JsonIgnoreProperties("category")
     private List<Document> documents = new ArrayList<>();
 

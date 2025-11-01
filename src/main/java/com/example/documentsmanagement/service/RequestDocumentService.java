@@ -61,30 +61,33 @@ public class RequestDocumentService {
 
         // --- Xử lý Borrower ---
         Borrower borrowerToSave = null;
-        if (requestDocument.getBorrower() != null) {
-            // Frontend gửi ID người mượn đã có
-            if (requestDocument.getBorrower().getId_borrower() != null) {
-                Long borrowerId = requestDocument.getBorrower().getId_borrower();
-                borrowerToSave = borrowerRepository.findById(borrowerId)
-                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Borrower với ID: " + borrowerId));
-            }
-            // Frontend gửi thông tin người mượn mới (không có ID)
-            else if (requestDocument.getBorrower().getEmployeeCode() != null) {
-                Optional<Borrower> existingByCode = borrowerRepository.findByEmployeeCode(requestDocument.getBorrower().getEmployeeCode());
-                if (existingByCode.isPresent()) {
-                    borrowerToSave = existingByCode.get();
-                    System.out.println("Sử dụng Borrower đã tồn tại với mã: " + borrowerToSave.getEmployeeCode());
-                } else {
-                    Borrower newBorrowerData = requestDocument.getBorrower();
-                    newBorrowerData.setId_borrower(null);
-                    borrowerToSave = borrowerRepository.save(newBorrowerData);
-                    System.out.println("Đã tạo Borrower mới với mã: " + borrowerToSave.getEmployeeCode());
-                }
+        if (requestDocument.getBorrower() != null && requestDocument.getBorrower().getEmployeeCode() != null) {
+
+            String employeeCode = requestDocument.getBorrower().getEmployeeCode();
+            Borrower borrowerDataFromRequest = requestDocument.getBorrower();
+
+            Optional<Borrower> existingByCode = borrowerRepository.findByEmployeeCode(employeeCode);
+
+            if (existingByCode.isPresent()) {
+                borrowerToSave = existingByCode.get();
+                borrowerToSave.setFullName(borrowerDataFromRequest.getFullName());
+                borrowerToSave.setDepartment(borrowerDataFromRequest.getDepartment());
+                borrowerToSave.setPosition(borrowerDataFromRequest.getPosition());
+                borrowerToSave.setIdCardNumber(borrowerDataFromRequest.getIdCardNumber());
+                borrowerToSave.setPhoneNumber(borrowerDataFromRequest.getPhoneNumber());
+
+                System.out.println("Đã cập nhật Borrower với mã: " + employeeCode);
             } else {
-                throw new IllegalArgumentException("Thiếu thông tin ID hoặc Mã cán bộ (Employee Code) của người mượn.");
+                borrowerDataFromRequest.setId_borrower(null);
+                borrowerToSave = borrowerDataFromRequest;
+
+                System.out.println("Đã tạo Borrower mới với mã: " + employeeCode);
             }
+
+            borrowerToSave = borrowerRepository.save(borrowerToSave);
+
         } else {
-            throw new IllegalArgumentException("Thiếu thông tin người mượn (Borrower).");
+            throw new IllegalArgumentException("Thiếu thông tin người mượn (Borrower) hoặc Mã cán bộ (Employee Code).");
         }
 
         // --- Cập nhật trạng thái document ---
