@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -216,12 +218,29 @@ public class RequestDocumentService {
                               LocalDate endDate,
                               String type) throws IOException {
 
-        response.setContentType("application/octet-stream");
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=request_documents.xlsx";
-        response.setHeader(headerKey, headerValue);
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd_MM_yyyy");
+        String currentDate = LocalDate.now().format(dateFormatter);
 
-        // === Lấy dữ liệu tương ứng với loại báo cáo ===
+        // === Đặt tên file tiếng Việt ===
+        String fileName;
+        switch (type.toLowerCase()) {
+            case "day" -> fileName = "Báo cáo mượn hồ sơ ngày " + startDate.format(dateFormatter) + ".xlsx";
+            case "month" -> fileName = "Báo cáo mượn hồ sơ tháng " + startDate.getMonthValue() + "_" + startDate.getYear() + ".xlsx";
+            case "year" -> fileName = "Báo cáo mượn hồ sơ năm " + startDate.getYear() + ".xlsx";
+            case "range" -> fileName = "Báo cáo mượn hồ sơ từ " + startDate.format(dateFormatter)
+                    + " đến " + endDate.format(dateFormatter) + ".xlsx";
+            default -> fileName = "Báo cáo mượn hồ sơ tất cả_" + currentDate + ".xlsx";
+        }
+
+        // === Mã hóa UTF-8 để trình duyệt nhận đúng tên có dấu ===
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+
+        // === Thiết lập response ===
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition",
+                "attachment; filename*=UTF-8''" + encodedFileName);
+
+        // === Lấy dữ liệu tương ứng loại báo cáo ===
         List<RequestDocument> list;
         if ("day".equalsIgnoreCase(type)) {
             list = findByDate(startDate);
@@ -237,8 +256,6 @@ public class RequestDocumentService {
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Báo cáo mượn hồ sơ");
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         CreationHelper creationHelper = workbook.getCreationHelper();
 
         // === Font và Style ===
@@ -266,8 +283,9 @@ public class RequestDocumentService {
         headerStyle.setBorderLeft(BorderStyle.THIN);
         headerStyle.setBorderRight(BorderStyle.THIN);
 
+        // === Font nội dung cỡ 14 ===
         Font contentFont = workbook.createFont();
-        contentFont.setFontHeightInPoints((short) 13);
+        contentFont.setFontHeightInPoints((short) 14);
         contentFont.setFontName("Times New Roman");
 
         CellStyle contentStyle = workbook.createCellStyle();
@@ -277,38 +295,34 @@ public class RequestDocumentService {
         contentStyle.setBorderTop(BorderStyle.THIN);
         contentStyle.setBorderLeft(BorderStyle.THIN);
         contentStyle.setBorderRight(BorderStyle.THIN);
+        contentStyle.setWrapText(true); // Tự xuống dòng nếu dài
 
         CellStyle dateStyle = workbook.createCellStyle();
         dateStyle.cloneStyleFrom(contentStyle);
         dateStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/MM/yyyy"));
 
-        // === Cột ===
+        // === Tạo tiêu đề cột ===
         String[] columns = {
                 "STT", "Ngày mượn", "Ngày trả", "Hạn trả", "Loại tài liệu",
-                "Người ký phiếu mượn", "Họ và tên người mượn", "Họ và tên thủ thư", "Ghi chú"
+                "Người ký phiếu mượn", "Người mượn", "Thủ thư phụ trách", "Ghi chú"
         };
 
-        // === Tiêu đề lớn ===
+        // === Tiêu đề báo cáo ===
         Row titleRow = sheet.createRow(0);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, columns.length - 1));
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellStyle(titleStyle);
 
-        String titleText;
-        switch (type.toLowerCase()) {
-            case "day" -> titleText = "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ NGÀY " +
-                    startDate.format(formatter);
-            case "month" -> titleText = "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ THÁNG " +
-                    startDate.getMonthValue() + "/" + startDate.getYear();
-            case "year" -> titleText = "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ NĂM " +
-                    startDate.getYear();
-            case "range" -> titleText = "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ TỪ NGÀY " +
-                    startDate.format(formatter) + " ĐẾN NGÀY " + endDate.format(formatter);
-            default -> titleText = "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ - TẤT CẢ DỮ LIỆU";
-        }
-
-        // 🔠 Viết hoa toàn bộ bằng chuẩn tiếng Việt
-        titleCell.setCellValue(titleText.toUpperCase(java.util.Locale.forLanguageTag("vi")));
+        DateTimeFormatter viewFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String titleText = switch (type.toLowerCase()) {
+            case "day" -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ NGÀY " + startDate.format(viewFormatter);
+            case "month" -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ THÁNG " + startDate.getMonthValue() + "/" + startDate.getYear();
+            case "year" -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ NĂM " + startDate.getYear();
+            case "range" -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ TỪ " +
+                    startDate.format(viewFormatter) + " ĐẾN " + endDate.format(viewFormatter);
+            default -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ (TẤT CẢ DỮ LIỆU)";
+        };
+        titleCell.setCellValue(titleText);
 
         // === Header cột ===
         Row headerRow = sheet.createRow(2);
@@ -323,52 +337,59 @@ public class RequestDocumentService {
         int stt = 1;
         for (RequestDocument doc : list) {
             Row row = sheet.createRow(rowNum++);
+            int col = 0;
 
-            Cell cell0 = row.createCell(0);
-            cell0.setCellValue(stt++);
-            cell0.setCellStyle(contentStyle);
+            Cell cell = row.createCell(col++);
+            cell.setCellValue(stt++);
+            cell.setCellStyle(contentStyle);
 
-            Cell cell1 = row.createCell(1);
+            cell = row.createCell(col++);
             if (doc.getBorrowDate() != null) {
-                cell1.setCellValue(java.sql.Date.valueOf(doc.getBorrowDate()));
-                cell1.setCellStyle(dateStyle);
-            } else cell1.setCellStyle(contentStyle);
+                cell.setCellValue(java.sql.Date.valueOf(doc.getBorrowDate()));
+                cell.setCellStyle(dateStyle);
+            } else cell.setCellStyle(contentStyle);
 
-            Cell cell2 = row.createCell(2);
+            cell = row.createCell(col++);
             if (doc.getReturnDate() != null) {
-                cell2.setCellValue(java.sql.Date.valueOf(doc.getReturnDate()));
-                cell2.setCellStyle(dateStyle);
-            } else cell2.setCellStyle(contentStyle);
+                cell.setCellValue(java.sql.Date.valueOf(doc.getReturnDate()));
+                cell.setCellStyle(dateStyle);
+            } else cell.setCellStyle(contentStyle);
 
-            Cell cell3 = row.createCell(3);
+            cell = row.createCell(col++);
             if (doc.getReturnDeadline() != null) {
-                cell3.setCellValue(java.sql.Date.valueOf(doc.getReturnDeadline()));
-                cell3.setCellStyle(dateStyle);
-            } else cell3.setCellStyle(contentStyle);
+                cell.setCellValue(java.sql.Date.valueOf(doc.getReturnDeadline()));
+                cell.setCellStyle(dateStyle);
+            } else cell.setCellStyle(contentStyle);
 
+            // ✅ Hiển thị "photo" là "Bản sao", "original" là "Bản gốc"
             String copyType = doc.getCopyType();
-            if ("original".equalsIgnoreCase(copyType)) copyType = "Bản gốc";
-            Cell cell4 = row.createCell(4);
-            cell4.setCellValue(copyType != null ? copyType : "");
-            cell4.setCellStyle(contentStyle);
+            if (copyType != null) {
+                if (copyType.equalsIgnoreCase("original")) copyType = "Bản gốc";
+                else if (copyType.equalsIgnoreCase("copy") || copyType.equalsIgnoreCase("photo")) copyType = "Bản photo";
+            }
 
-            Cell cell5 = row.createCell(5);
-            cell5.setCellValue(doc.getSigner() != null ? doc.getSigner() : "");
-            cell5.setCellStyle(contentStyle);
+            cell = row.createCell(col++);
+            cell.setCellValue(copyType != null ? copyType : "");
+            cell.setCellStyle(contentStyle);
 
-            Cell cell6 = row.createCell(6);
-            cell6.setCellValue(doc.getBorrower() != null ? doc.getBorrower().getFullName() : "");
-            cell6.setCellStyle(contentStyle);
+            cell = row.createCell(col++);
+            cell.setCellValue(doc.getSigner() != null ? doc.getSigner() : "");
+            cell.setCellStyle(contentStyle);
 
-            Cell cell7 = row.createCell(7);
-            cell7.setCellValue(doc.getLibrarian() != null ? doc.getLibrarian().getFullName() : "");
-            cell7.setCellStyle(contentStyle);
+            cell = row.createCell(col++);
+            cell.setCellValue(doc.getBorrower() != null ? doc.getBorrower().getFullName() : "");
+            cell.setCellStyle(contentStyle);
 
-            Cell cell8 = row.createCell(8);
-            cell8.setCellValue(doc.getNote() != null ? doc.getNote() : "");
-            cell8.setCellStyle(contentStyle);
+            cell = row.createCell(col++);
+            cell.setCellValue(doc.getLibrarian() != null ? doc.getLibrarian().getFullName() : "");
+            cell.setCellStyle(contentStyle);
+
+            cell = row.createCell(col++);
+            cell.setCellValue(doc.getNote() != null ? doc.getNote() : "");
+            cell.setCellStyle(contentStyle);
         }
 
+        // === Tự động căn chỉnh độ rộng ===
         for (int i = 0; i < columns.length; i++) {
             sheet.autoSizeColumn(i);
         }
@@ -376,5 +397,6 @@ public class RequestDocumentService {
         workbook.write(response.getOutputStream());
         workbook.close();
     }
+
 
 }
