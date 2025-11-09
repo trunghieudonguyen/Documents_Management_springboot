@@ -25,7 +25,7 @@ public interface RequestDocumentRepository extends JpaRepository<RequestDocument
 
     // 📜 Lịch sử mượn của 1 tài liệu cụ thể (theo idDocument)
     @Query("""
-        SELECT DISTINCT r FROM RequestDocument r
+        SELECT r FROM RequestDocument r
         JOIN FETCH r.documents d
         WHERE d.idDocument = :documentId
         ORDER BY r.borrowDate DESC
