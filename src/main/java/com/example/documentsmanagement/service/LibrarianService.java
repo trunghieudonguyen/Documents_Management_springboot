@@ -36,20 +36,25 @@ public class LibrarianService {
     }
 
     public Librarian update(Long id, Librarian changes) {
-        // Basic update: ensure id is set on entity and save.
-        try {
-            java.lang.reflect.Field idField = changes.getClass().getDeclaredField("idLibrarian");
-            idField.setAccessible(true);
-            Object val = idField.get(changes);
-            if (val == null) {
-                // set id value reflectively
-                idField.set(changes, id);
-            }
-        } catch (Exception ex) {
-            // If reflection fails, ignore; repository.save will still work if entity has id set.
+        Optional<Librarian> existingOpt = repository.findById(id);
+        if (existingOpt.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy thủ thư với ID: " + id);
         }
-        return repository.save(changes);
+
+        Librarian existing = existingOpt.get();
+
+        // Cập nhật các trường cho phép thay đổi
+        existing.setFullName(changes.getFullName());
+        existing.setPhoneNumber(changes.getPhoneNumber());
+        existing.setEmail(changes.getEmail());
+        existing.setRank(changes.getRank());
+        existing.setPosition(changes.getPosition());
+        existing.setStaffCode(changes.getStaffCode());
+        existing.setUsername(changes.getUsername());
+
+        return repository.save(existing);
     }
+
 
     public boolean changePassword(Long id, String oldPassword, String newPassword) {
         Librarian librarian = repository.findById(id)
