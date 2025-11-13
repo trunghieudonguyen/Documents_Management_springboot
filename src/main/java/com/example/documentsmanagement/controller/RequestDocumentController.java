@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -102,7 +103,7 @@ public class RequestDocumentController {
         if ((type.equalsIgnoreCase("day") ||
                 type.equalsIgnoreCase("month") ||
                 type.equalsIgnoreCase("year")) && startDate == null) {
-            throw new IllegalArgumentException("Vui lòng cung cấp startDate cho loại báo cáo: " + type);
+            throw new IllegalArgumentException("Vui lòng nhập ngày cho loại báo cáo: " + type);
         }
 
         if (type.equalsIgnoreCase("range") && (startDate == null || endDate == null)) {
@@ -113,5 +114,28 @@ public class RequestDocumentController {
         service.exportToExcel(response, startDate, endDate, type);
     }
 
+    @PostMapping("/upload-photo/{id}")
+    public ResponseEntity<?> uploadPhoto(
+            @PathVariable("id") Long requestId,
+            @RequestBody Map<String, String> body
+    ) {
+        System.out.println("🟢 Nhận upload-photo: id=" + requestId);
+        System.out.println("🟢 Body nhận được: " + body);
+
+        try {
+            String base64Image = body.get("image");
+            String photoPath = service.saveCapturedPhoto(requestId, base64Image);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Ảnh đã được lưu thành công",
+                    "photoPath", photoPath
+            ));
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body(Map.of("error", "Lỗi khi lưu ảnh: " + e.getMessage()));
+        }
+    }
 
 }

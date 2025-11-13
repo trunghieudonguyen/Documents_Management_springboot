@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.example.documentsmanagement.security.JwtUtil;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -17,6 +18,7 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
+    private final JwtUtil jwtUtil;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
@@ -24,26 +26,28 @@ public class AuthController {
     private final PasswordResetService passwordResetService;
 
     public AuthController(LibrarianRepository librarianRepository,
-                          PasswordResetService passwordResetService) {
+                          PasswordResetService passwordResetService,
+                          JwtUtil jwtUtil) {
         this.librarianRepository = librarianRepository;
         this.passwordResetService = passwordResetService;
+        this.jwtUtil = jwtUtil;
     }
 
     // =============================
     // 🔹 Đăng nhập
     // =============================
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        if (request == null ||
-                request.getUsername() == null || request.getUsername().isBlank() ||
-                request.getPassword() == null || request.getPassword().isBlank()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Thiếu tên người dùng hoặc mật khẩu"));
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Thiếu tên người dùng hoặc mật khẩu"));
         }
 
         try {
             Optional<Librarian> librarianOpt =
-                    librarianRepository.findByUsernameAndPasswordHashed(request.getUsername(), request.getPassword());
+                    librarianRepository.findByUsernameAndPasswordHashed(username, password);
 
             if (librarianOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -51,11 +55,16 @@ public class AuthController {
             }
 
             Librarian librarian = librarianOpt.get();
+
+            // ✅ Sinh token JWT
+            String token = jwtUtil.generateToken(librarian.getUsername());
+
             return ResponseEntity.ok(Map.of(
                     "message", "Đăng nhập thành công!",
                     "username", librarian.getUsername(),
                     "fullName", librarian.getFullName(),
-                    "email", librarian.getEmail()
+                    "email", librarian.getEmail(),
+                    "token", token
             ));
         } catch (Exception ex) {
             logger.error("❌ Lỗi đăng nhập: {}", ex.getMessage(), ex);

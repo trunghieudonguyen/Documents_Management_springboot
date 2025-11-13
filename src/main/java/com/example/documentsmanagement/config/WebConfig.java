@@ -25,4 +25,5 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler(resourcePath)
                 .addResourceLocations(resourceLocation);
     }
+
 }

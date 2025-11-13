@@ -25,17 +25,12 @@ public interface RequestDocumentRepository extends JpaRepository<RequestDocument
 
     // 📜 Lịch sử mượn của 1 tài liệu cụ thể (theo idDocument)
     @Query("""
-        SELECT r FROM RequestDocument r
-        JOIN FETCH r.documents
-        WHERE r.idRequestDocument IN (
-            SELECT r2.idRequestDocument FROM RequestDocument r2
-            JOIN r2.documents d2
-            WHERE d2.idDocument = :documentId
-        )
+        SELECT DISTINCT r FROM RequestDocument r
+        JOIN FETCH r.documents d
+        WHERE d.idDocument = :documentId
         ORDER BY r.borrowDate DESC
     """)
     List<RequestDocument> findHistoryByDocumentId(@Param("documentId") Long documentId);
-
 
     // 📆 Lấy các phiếu mượn trong 1 ngày cụ thể
     @Query("""

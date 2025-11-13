@@ -14,13 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -396,6 +399,41 @@ public class RequestDocumentService {
 
         workbook.write(response.getOutputStream());
         workbook.close();
+    }
+
+
+    public String saveCapturedPhoto(Long requestId, String base64Image) throws IOException {
+        if (base64Image == null || base64Image.isEmpty()) {
+            throw new IllegalArgumentException("Không có ảnh để lưu");
+        }
+
+        Optional<RequestDocument> optional = repository.findById(requestId);
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy hồ sơ mượn có ID: " + requestId);
+        }
+
+        RequestDocument request = optional.get();
+
+        // === Giải mã ảnh từ Base64 ===
+        String[] parts = base64Image.split(",");
+        byte[] imageBytes = Base64.getDecoder().decode(parts.length > 1 ? parts[1] : parts[0]);
+
+        // === Tạo thư mục lưu trữ ===
+        String folder = "uploads/photos/";
+        Files.createDirectories(Paths.get(folder));
+
+        // === Đặt tên file ảnh ===
+        String fileName = "photo_" + requestId + "_" + System.currentTimeMillis() + ".png";
+        Path path = Paths.get(folder + fileName);
+
+        // === Ghi file ra đĩa ===
+        Files.write(path, imageBytes);
+
+        // === Lưu đường dẫn vào DB ===
+        request.setAttachmentPath("/" + folder + fileName.replace("\\", "/"));
+        repository.save(request);
+
+        return request.getAttachmentPath();
     }
 
 
