@@ -55,7 +55,6 @@ public class LibrarianService {
         return repository.save(existing);
     }
 
-
     public boolean changePassword(Long id, String oldPassword, String newPassword) {
         Librarian librarian = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản"));
