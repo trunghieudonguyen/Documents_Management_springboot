@@ -11,6 +11,7 @@ import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -215,47 +216,14 @@ public class RequestDocumentService {
         return repository.findByDateRange(start, end);
     }
 
-    // ======================= HÀM XUẤT FILE EXCEL =======================
-    public void exportToExcel(HttpServletResponse response,
-                              LocalDate startDate,
-                              LocalDate endDate,
-                              String type) throws IOException {
 
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd_MM_yyyy");
-        String currentDate = LocalDate.now().format(dateFormatter);
-
-        // === Đặt tên file tiếng Việt ===
-        String fileName;
-        switch (type.toLowerCase()) {
-            case "day" -> fileName = "Báo cáo mượn hồ sơ ngày " + startDate.format(dateFormatter) + ".xlsx";
-            case "month" -> fileName = "Báo cáo mượn hồ sơ tháng " + startDate.getMonthValue() + "_" + startDate.getYear() + ".xlsx";
-            case "year" -> fileName = "Báo cáo mượn hồ sơ năm " + startDate.getYear() + ".xlsx";
-            case "range" -> fileName = "Báo cáo mượn hồ sơ từ " + startDate.format(dateFormatter)
-                    + " đến " + endDate.format(dateFormatter) + ".xlsx";
-            default -> fileName = "Báo cáo mượn hồ sơ tất cả_" + currentDate + ".xlsx";
-        }
-
-        // === Mã hóa UTF-8 để trình duyệt nhận đúng tên có dấu ===
-        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
-
-        // === Thiết lập response ===
-        response.setContentType("application/octet-stream");
-        response.setHeader("Content-Disposition",
-                "attachment; filename*=UTF-8''" + encodedFileName);
-
-        // === Lấy dữ liệu tương ứng loại báo cáo ===
-        List<RequestDocument> list;
-        if ("day".equalsIgnoreCase(type)) {
-            list = findByDate(startDate);
-        } else if ("month".equalsIgnoreCase(type)) {
-            list = findByMonth(startDate.getMonthValue(), startDate.getYear());
-        } else if ("year".equalsIgnoreCase(type)) {
-            list = findByYear(startDate.getYear());
-        } else if ("range".equalsIgnoreCase(type)) {
-            list = findByDateRange(startDate, endDate);
-        } else {
-            list = findAll();
-        }
+    // ================================
+    // Tạo Workbook cho Request Document
+    // ================================
+    private Workbook buildWorkbookForReport(List<RequestDocument> list,
+                                            LocalDate startDate,
+                                            LocalDate endDate,
+                                            String type) {
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Báo cáo mượn hồ sơ");
@@ -286,7 +254,6 @@ public class RequestDocumentService {
         headerStyle.setBorderLeft(BorderStyle.THIN);
         headerStyle.setBorderRight(BorderStyle.THIN);
 
-        // === Font nội dung cỡ 14 ===
         Font contentFont = workbook.createFont();
         contentFont.setFontHeightInPoints((short) 14);
         contentFont.setFontName("Times New Roman");
@@ -298,13 +265,13 @@ public class RequestDocumentService {
         contentStyle.setBorderTop(BorderStyle.THIN);
         contentStyle.setBorderLeft(BorderStyle.THIN);
         contentStyle.setBorderRight(BorderStyle.THIN);
-        contentStyle.setWrapText(true); // Tự xuống dòng nếu dài
+        contentStyle.setWrapText(true);
 
         CellStyle dateStyle = workbook.createCellStyle();
         dateStyle.cloneStyleFrom(contentStyle);
         dateStyle.setDataFormat(creationHelper.createDataFormat().getFormat("dd/MM/yyyy"));
 
-        // === Tạo tiêu đề cột ===
+        // === Tiêu đề cột ===
         String[] columns = {
                 "STT", "Ngày mượn", "Ngày trả", "Hạn trả", "Loại tài liệu",
                 "Người ký phiếu mượn", "Người mượn", "Thủ thư phụ trách", "Ghi chú"
@@ -325,6 +292,7 @@ public class RequestDocumentService {
                     startDate.format(viewFormatter) + " ĐẾN " + endDate.format(viewFormatter);
             default -> "BÁO CÁO HOẠT ĐỘNG MƯỢN HỒ SƠ (TẤT CẢ DỮ LIỆU)";
         };
+
         titleCell.setCellValue(titleText);
 
         // === Header cột ===
@@ -338,6 +306,7 @@ public class RequestDocumentService {
         // === Ghi dữ liệu ===
         int rowNum = 3;
         int stt = 1;
+
         for (RequestDocument doc : list) {
             Row row = sheet.createRow(rowNum++);
             int col = 0;
@@ -346,25 +315,28 @@ public class RequestDocumentService {
             cell.setCellValue(stt++);
             cell.setCellStyle(contentStyle);
 
+            // Ngày mượn
             cell = row.createCell(col++);
             if (doc.getBorrowDate() != null) {
                 cell.setCellValue(java.sql.Date.valueOf(doc.getBorrowDate()));
                 cell.setCellStyle(dateStyle);
             } else cell.setCellStyle(contentStyle);
 
+            // Ngày trả
             cell = row.createCell(col++);
             if (doc.getReturnDate() != null) {
                 cell.setCellValue(java.sql.Date.valueOf(doc.getReturnDate()));
                 cell.setCellStyle(dateStyle);
             } else cell.setCellStyle(contentStyle);
 
+            // Hạn trả
             cell = row.createCell(col++);
             if (doc.getReturnDeadline() != null) {
                 cell.setCellValue(java.sql.Date.valueOf(doc.getReturnDeadline()));
                 cell.setCellStyle(dateStyle);
             } else cell.setCellStyle(contentStyle);
 
-            // ✅ Hiển thị "photo" là "Bản sao", "original" là "Bản gốc"
+            // Loại tài liệu
             String copyType = doc.getCopyType();
             if (copyType != null) {
                 if (copyType.equalsIgnoreCase("original")) copyType = "Bản gốc";
@@ -375,27 +347,93 @@ public class RequestDocumentService {
             cell.setCellValue(copyType != null ? copyType : "");
             cell.setCellStyle(contentStyle);
 
+            // Người ký
             cell = row.createCell(col++);
             cell.setCellValue(doc.getSigner() != null ? doc.getSigner() : "");
             cell.setCellStyle(contentStyle);
 
+            // Người mượn
             cell = row.createCell(col++);
             cell.setCellValue(doc.getBorrower() != null ? doc.getBorrower().getFullName() : "");
             cell.setCellStyle(contentStyle);
 
+            // Thủ thư
             cell = row.createCell(col++);
             cell.setCellValue(doc.getLibrarian() != null ? doc.getLibrarian().getFullName() : "");
             cell.setCellStyle(contentStyle);
 
+            // Ghi chú
             cell = row.createCell(col++);
             cell.setCellValue(doc.getNote() != null ? doc.getNote() : "");
             cell.setCellStyle(contentStyle);
         }
 
-        // === Tự động căn chỉnh độ rộng ===
+        // === Auto-width ===
         for (int i = 0; i < columns.length; i++) {
             sheet.autoSizeColumn(i);
         }
+
+        return workbook;
+    }
+
+    public String previewExcel(LocalDate startDate,
+                               LocalDate endDate,
+                               String type) {
+
+        List<RequestDocument> list = switch (type.toLowerCase()) {
+            case "day" -> findByDate(startDate);
+            case "month" -> findByMonth(startDate.getMonthValue(), startDate.getYear());
+            case "year" -> findByYear(startDate.getYear());
+            case "range" -> findByDateRange(startDate, endDate);
+            default -> findAll();
+        };
+
+        try {
+            Workbook workbook = buildWorkbookForReport(list, startDate, endDate, type);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            workbook.close();
+
+            return Base64.getEncoder().encodeToString(out.toByteArray());
+
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi tạo file xem trước Excel", e);
+        }
+    }
+
+
+    public void exportToExcel(HttpServletResponse response,
+                              LocalDate startDate,
+                              LocalDate endDate,
+                              String type) throws IOException {
+
+        DateTimeFormatter df = DateTimeFormatter.ofPattern("dd_MM_yyyy");
+
+        String fileName = switch (type.toLowerCase()) {
+            case "day" -> "Báo cáo mượn hồ sơ ngày " + startDate.format(df) + ".xlsx";
+            case "month" -> "Báo cáo mượn hồ sơ tháng " + startDate.getMonthValue() + "_" + startDate.getYear() + ".xlsx";
+            case "year" -> "Báo cáo mượn hồ sơ năm " + startDate.getYear() + ".xlsx";
+            case "range" -> "Báo cáo mượn hồ sơ từ " + startDate.format(df) +
+                    " đến " + endDate.format(df) + ".xlsx";
+            default -> "Báo cáo mượn hồ sơ tất cả_" + LocalDate.now().format(df) + ".xlsx";
+        };
+
+        String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
+
+        response.setContentType("application/octet-stream");
+        response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
+
+        // === Lấy dữ liệu ===
+        List<RequestDocument> list = switch (type.toLowerCase()) {
+            case "day" -> findByDate(startDate);
+            case "month" -> findByMonth(startDate.getMonthValue(), startDate.getYear());
+            case "year" -> findByYear(startDate.getYear());
+            case "range" -> findByDateRange(startDate, endDate);
+            default -> findAll();
+        };
+
+        Workbook workbook = buildWorkbookForReport(list, startDate, endDate, type);
 
         workbook.write(response.getOutputStream());
         workbook.close();

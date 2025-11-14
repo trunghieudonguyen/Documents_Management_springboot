@@ -114,6 +114,37 @@ public class RequestDocumentController {
         service.exportToExcel(response, startDate, endDate, type);
     }
 
+    @GetMapping("/preview-excel")
+    public ResponseEntity<String> previewExcel(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
+
+            @RequestParam(defaultValue = "all") String type
+    ) {
+
+        // ⚠ Kiểm tra đầu vào giống exportToExcel
+        if ((type.equalsIgnoreCase("day") ||
+                type.equalsIgnoreCase("month") ||
+                type.equalsIgnoreCase("year")) && startDate == null) {
+
+            throw new IllegalArgumentException("Vui lòng nhập ngày cho loại báo cáo: " + type);
+        }
+
+        if (type.equalsIgnoreCase("range") && (startDate == null || endDate == null)) {
+            throw new IllegalArgumentException("Vui lòng cung cấp cả ngày bắt đầu và ngày kết thúc cho báo cáo.");
+        }
+
+        // ⚠ Gọi service preview
+        String base64 = service.previewExcel(startDate, endDate, type);
+
+        return ResponseEntity.ok(base64);
+    }
+
     @PostMapping("/upload-photo/{id}")
     public ResponseEntity<?> uploadPhoto(
             @PathVariable("id") Long requestId,
