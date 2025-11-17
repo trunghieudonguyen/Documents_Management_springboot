@@ -185,8 +185,27 @@ public class RequestDocumentService {
     }
 
     // Xóa yêu cầu mượn
+    @Transactional
     public void delete(Long id) {
-        repository.deleteById(id);
+        RequestDocument requestToDelete = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy phiếu mượn với ID: " + id));
+
+        boolean isOriginal = "original".equalsIgnoreCase(requestToDelete.getCopyType());
+        boolean isActiveLoan = requestToDelete.getReturnDate() == null;
+
+        if (isOriginal && isActiveLoan) {
+            Hibernate.initialize(requestToDelete.getDocuments());
+            List<Document> documents = requestToDelete.getDocuments();
+
+            if (documents != null && !documents.isEmpty()) {
+                for (Document doc : documents) {
+                    doc.setStatus("available");
+                    documentRepository.save(doc); 
+                }
+            }
+        }
+
+        repository.delete(requestToDelete);
     }
 
     // Tìm kiếm theo mã số tài liệu hoặc người ký
