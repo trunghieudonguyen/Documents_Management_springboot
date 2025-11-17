@@ -25,26 +25,38 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
         JwtFilter jwtFilter = new JwtFilter(jwtUtil);
 
         http
-                // ✅ Cho phép CORS (React frontend gọi API được)
+                // Cho phép CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // ✅ Tắt CSRF vì API dùng JWT
+
+                // Tắt CSRF
                 .csrf(AbstractHttpConfigurer::disable)
-                // ✅ Cấu hình quyền truy cập
+
+                // Phân quyền
                 .authorizeHttpRequests(auth -> auth
+                        // ⚠️ Các API không cần JWT
                         .requestMatchers(
-                                "/api/auth/**",       // cho phép login/register
-                                "/public/**",         // tài nguyên công khai
-                                "/error",             // lỗi chung
+                                "/api/auth/**",                     // login, register
+                                "/public/**",                       // file tĩnh
+                                "/error",
                                 "/favicon.ico"
+
+                                // ---- ⚡ THÊM API PREVIEW / EXPORT ----
+                                //"/api/request-documents/preview-excel",
+                                //"/api/request-documents/export-excel"
                         ).permitAll()
+
+                        // Các API khác phải có JWT
                         .anyRequest().authenticated()
                 )
-                // ✅ Thêm bộ lọc JWT
+
+                // Gắn filter JWT vào trước UsernamePasswordAuthenticationFilter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-                // ✅ Tắt Basic Auth và Form Login mặc định
+
+                // Tắt form login và basic auth mặc định
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable);
 
@@ -52,22 +64,25 @@ public class SecurityConfig {
     }
 
     /**
-     * ✅ Cấu hình CORS cho phép frontend React (localhost:3000)
+     * Cấu hình CORS cho React
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",   // React dev
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+                "http://localhost:3000",
                 "http://127.0.0.1:3000"
         ));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization"));
-        configuration.setAllowCredentials(true); // cho phép gửi cookie/token
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 }

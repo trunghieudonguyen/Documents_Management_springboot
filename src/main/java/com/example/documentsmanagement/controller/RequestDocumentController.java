@@ -5,6 +5,7 @@ import com.example.documentsmanagement.service.RequestDocumentService;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -114,35 +115,24 @@ public class RequestDocumentController {
         service.exportToExcel(response, startDate, endDate, type);
     }
 
-    @GetMapping("/preview-excel")
+    @GetMapping(value = "/preview-excel", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> previewExcel(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "all") String type) throws Exception {
 
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate endDate,
-
-            @RequestParam(defaultValue = "all") String type
-    ) {
-
-        // ⚠ Kiểm tra đầu vào giống exportToExcel
+        // Validate like exportToExcel
         if ((type.equalsIgnoreCase("day") ||
                 type.equalsIgnoreCase("month") ||
                 type.equalsIgnoreCase("year")) && startDate == null) {
-
             throw new IllegalArgumentException("Vui lòng nhập ngày cho loại báo cáo: " + type);
         }
-
         if (type.equalsIgnoreCase("range") && (startDate == null || endDate == null)) {
             throw new IllegalArgumentException("Vui lòng cung cấp cả ngày bắt đầu và ngày kết thúc cho báo cáo.");
         }
 
-        // ⚠ Gọi service preview
-        String base64 = service.previewExcel(startDate, endDate, type);
-
-        return ResponseEntity.ok(base64);
+        String html = service.previewExcelAsHtml(startDate, endDate, type);
+        return ResponseEntity.ok(html);
     }
 
     @PostMapping("/upload-photo/{id}")

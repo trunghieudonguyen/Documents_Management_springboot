@@ -11,6 +11,12 @@ import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -419,6 +425,161 @@ public class RequestDocumentService {
         } catch (IOException e) {
             throw new RuntimeException("Lỗi tạo file xem trước Excel", e);
         }
+    }
+
+    public String previewExcelAsHtml(LocalDate startDate, LocalDate endDate, String type) throws IOException {
+        // Lấy dữ liệu giống exportToExcel
+        List<RequestDocument> list = switch (type.toLowerCase()) {
+            case "day" -> findByDate(startDate);
+            case "month" -> findByMonth(startDate.getMonthValue(), startDate.getYear());
+            case "year" -> findByYear(startDate.getYear());
+            case "range" -> findByDateRange(startDate, endDate);
+            default -> findAll();
+        };
+
+        // Build workbook (bạn đã có phương thức này)
+        Workbook workbook = buildWorkbookForReport(list, startDate, endDate, type);
+
+        // Convert workbook -> HTML
+        String html = convertWorkbookToHtml(workbook);
+
+        workbook.close();
+        return html;
+    }
+
+
+    private String convertWorkbookToHtml(Workbook workbook) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("<!doctype html><html><head><meta charset='utf-8'>");
+        sb.append("<style>");
+        sb.append("body{font-family:'Times New Roman', serif; padding:12px;font-size:14px;} ");
+        sb.append("table{border-collapse: collapse; width: 100%; margin-top:16px;} ");
+        sb.append("th, td{border:1px solid #000; padding:6px; vertical-align:middle;} ");
+        sb.append("th{background:#f2f2f2; font-weight: bold; text-align:center;} ");
+        sb.append("</style></head><body>");
+
+        DataFormatter fm = new DataFormatter();
+        FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+
+        Sheet sheet = workbook.getSheetAt(0);
+        if (sheet == null) {
+            sb.append("<p>Không có dữ liệu</p></body></html>");
+            return sb.toString();
+        }
+
+        // === Lấy danh sách cell merge ===
+        List<CellRangeAddress> merges = sheet.getMergedRegions();
+
+        sb.append("<table>");
+
+        int firstRow = sheet.getFirstRowNum();
+        int lastRow = sheet.getLastRowNum();
+
+        for (int r = firstRow; r <= lastRow; r++) {
+            Row row = sheet.getRow(r);
+            if (row == null) continue;
+
+            sb.append("<tr>");
+
+            int lastCol = row.getLastCellNum();
+            if (lastCol < 0) lastCol = 1;
+
+            for (int c = 0; c < lastCol; c++) {
+
+                CellRangeAddress merged = getMergedRegion(merges, r, c);
+
+                if (merged != null) {
+                    if (merged.getFirstColumn() != c || merged.getFirstRow() != r) continue;
+
+                    int rowspan = merged.getLastRow() - merged.getFirstRow() + 1;
+                    int colspan = merged.getLastColumn() - merged.getFirstColumn() + 1;
+
+                    Cell cell = row.getCell(c);
+                    String text = cell == null ? "" : fm.formatCellValue(cell, evaluator);
+
+                    sb.append("<td rowspan='").append(rowspan)
+                            .append("' colspan='").append(colspan)
+                            .append("' style=\"font-family:'Times New Roman';")
+                            .append(getHtmlStyle(cell))
+                            .append("\">")
+                            .append(escapeHtml(text))
+                            .append("</td>");
+                } else {
+                    Cell cell = row.getCell(c);
+                    String text = cell == null ? "" : fm.formatCellValue(cell, evaluator);
+
+                    sb.append("<td style=\"font-family:'Times New Roman';")
+                            .append(getHtmlStyle(cell))
+                            .append("\">")
+                            .append(escapeHtml(text))
+                            .append("</td>");
+                }
+            }
+            sb.append("</tr>");
+        }
+
+        sb.append("</table>");
+        sb.append("</body></html>");
+
+        return sb.toString();
+    }
+
+    /**
+     * Lấy merge region (nếu ô thuộc vùng merge)
+     */
+    private CellRangeAddress getMergedRegion(List<CellRangeAddress> merges, int row, int col) {
+        for (CellRangeAddress region : merges) {
+            if (region.isInRange(row, col)) return region;
+        }
+        return null;
+    }
+
+    /**
+     * Convert style Excel → HTML inline
+     */
+    private String getHtmlStyle(Cell cell) {
+        if (cell == null || cell.getCellStyle() == null) return "";
+
+        CellStyle style = cell.getCellStyle();
+        StringBuilder css = new StringBuilder();
+
+        // ALIGN
+        switch (style.getAlignment()) {
+            case CENTER -> css.append("text-align:center;");
+            case RIGHT -> css.append("text-align:right;");
+            default -> css.append("text-align:left;");
+        }
+
+        // VERTICAL ALIGN
+        switch (style.getVerticalAlignment()) {
+            case CENTER -> css.append("vertical-align:middle;");
+            case TOP -> css.append("vertical-align:top;");
+            case BOTTOM -> css.append("vertical-align:bottom;");
+        }
+
+        // FONT
+        Font font = cell.getSheet().getWorkbook().getFontAt(style.getFontIndex());
+        if (font != null) {
+            css.append("font-size:").append(font.getFontHeightInPoints()).append("px;");
+            if (font.getBold()) css.append("font-weight:bold;");
+        }
+
+        // BORDER
+        css.append("border:1px solid #000;");
+
+        // WRAP TEXT
+        if (style.getWrapText()) css.append("white-space:pre-line;");
+
+        return css.toString();
+    }
+
+    private String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;");
     }
 
 
