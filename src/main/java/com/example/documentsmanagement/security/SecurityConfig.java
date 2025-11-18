@@ -42,10 +42,10 @@ public class SecurityConfig {
                                 "/api/auth/**",                     // login, register
                                 "/public/**",                       // file tĩnh
                                 "/error",
-                                "/favicon.ico"
+                                "/favicon.ico",
 
                                 // ---- ⚡ THÊM API PREVIEW / EXPORT ----
-                                //"/api/request-documents/preview-excel",
+                                "/api/request-documents/preview-excel"
                                 //"/api/request-documents/export-excel"
                         ).permitAll()
 
