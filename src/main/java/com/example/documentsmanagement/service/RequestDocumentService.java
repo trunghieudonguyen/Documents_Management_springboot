@@ -10,6 +10,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.StringUtils; 
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -24,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -80,7 +83,7 @@ public class RequestDocumentService {
     }
 
     // Thêm mới yêu cầu mượn tài liệu
-    public RequestDocument create(RequestDocument requestDocument) {
+    public RequestDocument create(RequestDocument requestDocument, MultipartFile file) {
         requestDocument.setIdRequestDocument(null);
 
         // --- Xử lý Borrower ---
@@ -123,6 +126,28 @@ public class RequestDocumentService {
             requestDocument.setLibrarian(managedLibrarian);
         } else {
             throw new IllegalArgumentException("Thiếu thông tin Thủ thư (Librarian).");
+        }
+
+        // Lưu file đính kèm
+        if (file != null && !file.isEmpty()) {
+            try {
+                String folder = "uploads/";
+                Files.createDirectories(Paths.get(folder));
+                
+                String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+                
+                String fileName = System.currentTimeMillis() + "_" + originalFileName;
+                Path path = Paths.get(folder + fileName);
+                
+                Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+                
+                requestDocument.setAttachmentPath(fileName); 
+
+            } catch (IOException e) {
+                throw new RuntimeException("Lỗi khi lưu file đính kèm: " + e.getMessage());
+            }
+        } else {
+            requestDocument.setAttachmentPath(null);
         }
 
         // --- Cập nhật trạng thái document ---

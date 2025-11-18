@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -32,9 +34,12 @@ public class RequestDocumentController {
     }
 
     // 🟢 Tạo mới yêu cầu mượn tài liệu
-    @PostMapping
-    public ResponseEntity<RequestDocument> create(@RequestBody RequestDocument requestDocument) {
-        RequestDocument created = service.create(requestDocument);
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<RequestDocument> create(
+            @RequestPart("request") RequestDocument requestDocument,
+            @RequestPart("file") MultipartFile file) {
+        
+        RequestDocument created = service.create(requestDocument, file); 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 

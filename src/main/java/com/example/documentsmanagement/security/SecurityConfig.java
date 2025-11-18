@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/public/**",                       // file tĩnh
                                 "/error",
                                 "/favicon.ico",
+                                "/uploads/**",
 
                                 // ---- ⚡ THÊM API PREVIEW / EXPORT ----
                                 "/api/request-documents/preview-excel"
