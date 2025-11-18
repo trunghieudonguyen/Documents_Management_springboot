@@ -452,6 +452,7 @@ public class RequestDocumentService {
         StringBuilder sb = new StringBuilder();
 
         sb.append("<!doctype html><html><head><meta charset='utf-8'>");
+        sb.append("<title>Báo cáo xem trước Excel</title>");
         sb.append("<style>");
         sb.append("body{font-family:'Times New Roman', serif; padding:12px;font-size:14px;} ");
         sb.append("table{border-collapse: collapse; width: 100%; margin-top:16px;} ");
