@@ -25,11 +25,7 @@ public class DocumentService {
         this.categoryRepository = categoryRepository;
     }
 
-    // =========================================================
-
     // BASIC CRUD OPERATIONS
-    // =========================================================
-
     public List<Document> findAll() {
         return repository.findAll();
     }
