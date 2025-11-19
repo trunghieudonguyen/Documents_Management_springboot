@@ -54,22 +54,19 @@ public class NotificationService {
     }
 
     // Scheduler kiểm tra document sắp hết hạn và tạo notification
-    @Scheduled(cron = "0 30 8 * * ?") // Chạy mỗi ngày 8h30 sáng
+    @Scheduled(cron = "0 45 8 * * ?") // Chạy mỗi ngày 8h30 sáng
     public void notifyExpiringDocuments() {
         LocalDate today = LocalDate.now();
         LocalDate in1Day = today.plusDays(1);
-        LocalDate in3Days = today.plusDays(3);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         //Tạo thông báo hồ sơ sắp hết hạn
-        List<Document> expiringDocs = documentRepository.findByExpirationDateBetween(in1Day, in3Days);
+        List<Document> expiringDocs = documentRepository.findByExpirationDateAndStatusNot(in1Day, "detroy");
         for (Document doc : expiringDocs) {
-            long daysLeft = ChronoUnit.DAYS.between(today, doc.getExpirationDate()); // tính số ngày còn lại
-
             Notification notification = new Notification();
             notification.setContent(
                     "Hồ sơ " + doc.getTitle() + " hết hạn ngày " + formatter.format(doc.getExpirationDate())
-                            + " (còn " + daysLeft + " ngày)"
+                            + " (còn 1 ngày)"
             );
             notification.setStatus("expiring");
             notification.setIsRead(false);
@@ -79,7 +76,7 @@ public class NotificationService {
         }
 
         //Tạo thông báo hồ sơ hết hạn
-        List<Document> expiredDocs = documentRepository.findByExpirationDateBefore(today.plusDays(1));
+        List<Document> expiredDocs = documentRepository.findByExpirationDateBeforeAndStatusNot(in1Day, "detroy");
         for (Document doc : expiredDocs) {
             Notification notification = new Notification();
             notification.setContent("Hồ sơ " + doc.getTitle() + " đã hết hạn (ngày hết hạn: " + formatter.format(doc.getExpirationDate()) + ")");
@@ -91,14 +88,13 @@ public class NotificationService {
         }
 
         //Tạo thông báo hồ sơ sắp hết hạn
-        List<RequestDocument> expiringRequestDocuments = requestDocumentRepository.findByReturnDeadlineBetween(in1Day, in3Days);
+        List<RequestDocument> expiringRequestDocuments = requestDocumentRepository.findByReturnDeadlineAndReturnDateIsNull(in1Day);
         for (RequestDocument requestDocument : expiringRequestDocuments) {
-            long daysLeft = ChronoUnit.DAYS.between(today, requestDocument.getReturnDeadline()); // tính số ngày còn lại
 
             Notification notification = new Notification();
             notification.setContent(
                     "Cán bộ " + requestDocument.getBorrower().getFullName() + " sắp đến hạn trả ngày "
-                            + formatter.format(requestDocument.getReturnDeadline()) + " (còn " + daysLeft + " ngày)"
+                            + formatter.format(requestDocument.getReturnDeadline()) + " (còn 1 ngày)"
             );
             notification.setStatus("expiring");
             notification.setIsRead(false);
@@ -108,7 +104,7 @@ public class NotificationService {
         }
 
         //Tạo thông báo hồ sơ hết hạn
-        List<RequestDocument> expiredRequestDocuments = requestDocumentRepository.findByReturnDeadlineBefore(today.plusDays(1));
+        List<RequestDocument> expiredRequestDocuments = requestDocumentRepository.findByReturnDeadlineBeforeAndReturnDateIsNull(today.plusDays(1));
         for (RequestDocument requestDocument : expiredRequestDocuments) {
             Notification notification = new Notification();
             notification.setContent(

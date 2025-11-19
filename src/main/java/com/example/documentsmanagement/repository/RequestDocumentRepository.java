@@ -1,5 +1,6 @@
 package com.example.documentsmanagement.repository;
 
+import com.example.documentsmanagement.model.Document;
 import com.example.documentsmanagement.model.RequestDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,8 +21,8 @@ public interface RequestDocumentRepository extends JpaRepository<RequestDocument
     List<RequestDocument> searchByKeyword(@Param("keyword") String keyword);
 
     // 📅 Các phiếu sắp đến hạn và đã quá hạn
-    List<RequestDocument> findByReturnDeadlineBetween(LocalDate start, LocalDate end);
-    List<RequestDocument> findByReturnDeadlineBefore(LocalDate date);
+    List<RequestDocument> findByReturnDeadlineAndReturnDateIsNull(LocalDate returnDeadline);
+    List<RequestDocument> findByReturnDeadlineBeforeAndReturnDateIsNull(LocalDate date);
 
     // 📜 Lịch sử mượn của 1 tài liệu cụ thể (theo idDocument)
     @Query("""
