@@ -36,9 +36,9 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     List<Document> findByCategory_IdDocumentCategory(Long categoryId);
 
-    // Lấy danh sách document sắp hết hạn trong khoảng ngày và hết hạn
-    List<Document> findByExpirationDateBetween(LocalDate start, LocalDate end);
-    List<Document> findByExpirationDateBefore(LocalDate date);
+    // Lấy danh sách document sắp hết hạn trước 1 ngày và hết hạn
+    List<Document> findByExpirationDateAndStatusNot(LocalDate expirationDate, String status);
+    List<Document> findByExpirationDateBeforeAndStatusNot(LocalDate date, String status);
 
     @Query("""
         SELECT MAX(d.documentCode)
