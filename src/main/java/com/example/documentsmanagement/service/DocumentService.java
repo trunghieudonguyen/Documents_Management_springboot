@@ -34,11 +34,20 @@ public class DocumentService {
         return repository.findById(id);
     }
 
-    public void delete(Long id) {
+    /*public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new IllegalArgumentException("Không tìm thấy tài liệu có ID: " + id);
         }
         repository.deleteById(id);
+    }*/
+
+    public Document delete(Long id) {
+        // Kiểm tra tồn tại
+        Document document = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tài liệu có ID: " + id));
+
+        document.setStatus("destroy");
+        return repository.save(document);
     }
 
     // =========================================================
