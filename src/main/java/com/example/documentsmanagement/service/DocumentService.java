@@ -27,7 +27,10 @@ public class DocumentService {
 
     // BASIC CRUD OPERATIONS
     public List<Document> findAll() {
-        return repository.findAll();
+        return repository.findAll()
+                .stream()
+                .filter(doc -> !"destroy".equalsIgnoreCase(doc.getStatus()))
+                .toList();
     }
 
     public Optional<Document> findById(Long id) {
