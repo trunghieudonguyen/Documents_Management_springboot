@@ -14,7 +14,7 @@ public class JwtUtil {
     private static final String SECRET_KEY = "my-super-secret-key-for-jwt-authentication-1234567890";
 
     // ⏰ Thời gian hết hạn token: 1 giờ
-    private static final long EXPIRATION_TIME = 60 * 60 * 1000;
+    private static final long EXPIRATION_TIME = 30L * 24 * 60 * 60 * 1000;
 
     private final Key key;
 
