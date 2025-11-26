@@ -43,15 +43,18 @@ public class RequestDocumentService {
     private final DocumentRepository documentRepository;
     private final BorrowerRepository borrowerRepository;
     private final LibrarianRepository librarianRepository;
+    private final SignerRepository signerRepository;
 
     public RequestDocumentService(RequestDocumentRepository repository,
                                   DocumentRepository documentRepository,
                                   BorrowerRepository borrowerRepository,
-                                  LibrarianRepository librarianRepository) {
+                                  LibrarianRepository librarianRepository,
+                                  SignerRepository signerRepository) {
         this.repository = repository;
         this.documentRepository = documentRepository;
         this.borrowerRepository = borrowerRepository;
         this.librarianRepository = librarianRepository;
+        this.signerRepository = signerRepository;
     }
 
     // Lấy toàn bộ danh sách
@@ -88,33 +91,33 @@ public class RequestDocumentService {
 
         // --- Xử lý Borrower ---
         Borrower borrowerToSave = null;
-        if (requestDocument.getBorrower() != null && requestDocument.getBorrower().getEmployeeCode() != null) {
+        if (requestDocument.getBorrower() != null && requestDocument.getBorrower().getStaffCode() != null) {
 
-            String employeeCode = requestDocument.getBorrower().getEmployeeCode();
+            String staffCode = requestDocument.getBorrower().getStaffCode();
             Borrower borrowerDataFromRequest = requestDocument.getBorrower();
 
-            Optional<Borrower> existingByCode = borrowerRepository.findByEmployeeCode(employeeCode);
+            Optional<Borrower> existingByCode = borrowerRepository.findByStaffCode(staffCode);
 
             if (existingByCode.isPresent()) {
                 borrowerToSave = existingByCode.get();
                 borrowerToSave.setFullName(borrowerDataFromRequest.getFullName());
                 borrowerToSave.setDepartment(borrowerDataFromRequest.getDepartment());
+                borrowerToSave.setRank(borrowerDataFromRequest.getRank());
                 borrowerToSave.setPosition(borrowerDataFromRequest.getPosition());
-                borrowerToSave.setIdCardNumber(borrowerDataFromRequest.getIdCardNumber());
                 borrowerToSave.setPhoneNumber(borrowerDataFromRequest.getPhoneNumber());
 
-                System.out.println("Đã cập nhật Borrower với mã: " + employeeCode);
+                System.out.println("Đã cập nhật Borrower với mã: " + staffCode);
             } else {
                 borrowerDataFromRequest.setId_borrower(null);
                 borrowerToSave = borrowerDataFromRequest;
 
-                System.out.println("Đã tạo Borrower mới với mã: " + employeeCode);
+                System.out.println("Đã tạo Borrower mới với mã: " +staffCode);
             }
 
             borrowerToSave = borrowerRepository.save(borrowerToSave);
 
         } else {
-            throw new IllegalArgumentException("Thiếu thông tin người mượn (Borrower) hoặc Mã cán bộ (Employee Code).");
+            throw new IllegalArgumentException("Thiếu thông tin người mượn (Borrower) hoặc Số hiệu CAND (Staff Code).");
         }
 
         hydrateDocuments(requestDocument);
@@ -126,6 +129,15 @@ public class RequestDocumentService {
             requestDocument.setLibrarian(managedLibrarian);
         } else {
             throw new IllegalArgumentException("Thiếu thông tin Thủ thư (Librarian).");
+        }
+
+        if (requestDocument.getSigner() != null && requestDocument.getSigner().getIdSigner() != null) {
+            Long signerId = requestDocument.getSigner().getIdSigner();
+            Signer managedSigner = signerRepository.findById(signerId)
+                    .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Người ký (Signer) với ID: " + signerId));
+            requestDocument.setSigner(managedSigner);
+        } else {
+            throw new IllegalArgumentException("Thiếu thông tin Người ký quyết định (Signer).");
         }
 
         // Lưu file đính kèm
@@ -204,6 +216,12 @@ public class RequestDocumentService {
                 if (borrowerToSet != null) {
                     existing.setBorrower(borrowerToSet);
                 }
+            }
+
+            if (incoming.getSigner() != null && incoming.getSigner().getIdSigner() != null) {
+                Signer signerToSet = signerRepository.findById(incoming.getSigner().getIdSigner())
+                        .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy Signer ID: " + incoming.getSigner().getIdSigner()));
+                existing.setSigner(signerToSet);
             }
 
             if (incoming.getNote() != null || existing.getNote() != null) {
@@ -399,7 +417,7 @@ public class RequestDocumentService {
 
             // Người ký
             cell = row.createCell(col++);
-            cell.setCellValue(doc.getSigner() != null ? doc.getSigner() : "");
+            cell.setCellValue(doc.getSigner() != null ? doc.getSigner().getFullName() : "");
             cell.setCellStyle(contentStyle);
 
             // Người mượn

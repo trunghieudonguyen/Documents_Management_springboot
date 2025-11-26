@@ -35,13 +35,20 @@ public class BorrowerService {
             throw new RuntimeException("Không tìm thấy người mượn với ID: " + id);
         }
 
+        if (changes.getStaffCode() != null && !changes.getStaffCode().trim().isEmpty()) {
+            Optional<Borrower> duplicate = repository.findByStaffCode(changes.getStaffCode().trim());
+            if (duplicate.isPresent() && !duplicate.get().getId_borrower().equals(id)) {
+                throw new RuntimeException("Số hiệu trùng với " + duplicate.get().getFullName());
+            }
+        }
+
         Borrower existing = existingOpt.get();
+        existing.setStaffCode(changes.getStaffCode());
         existing.setFullName(changes.getFullName());
         existing.setDepartment(changes.getDepartment());
+        existing.setRank(changes.getRank());
         existing.setPosition(changes.getPosition());
-        existing.setIdCardNumber(changes.getIdCardNumber());
         existing.setPhoneNumber(changes.getPhoneNumber());
-        existing.setEmployeeCode(changes.getEmployeeCode());
         return repository.save(existing);
     }
 

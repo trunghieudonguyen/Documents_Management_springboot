@@ -43,8 +43,9 @@ public class RequestDocument {
     @Column(name = "EXTENSION_COUNT")
     private int extensionCount;
 
-    @Column(name = "SIGNER", length = 100)
-    private String signer;
+    @ManyToOne
+    @JoinColumn(name = "ID_SIGNER")
+    private Signer signer;
 
     @Column(name = "ATTACHMENT_PATH", length = 255)
     private String attachmentPath;
@@ -72,7 +73,7 @@ public class RequestDocument {
     public RequestDocument() {}
 
     public RequestDocument(String documentNumber, LocalDate borrowDate, String copyType,
-                           LocalDate returnDeadline, int extensionCount, String signer,
+                           LocalDate returnDeadline, int extensionCount, Signer signer,
                            String attachmentPath, Librarian librarian, Borrower borrower, List<Document> documents) {
         this.documentNumber = documentNumber;
         this.borrowDate = borrowDate;
@@ -135,11 +136,11 @@ public class RequestDocument {
         this.extensionCount = extensionCount;
     }
 
-    public String getSigner() {
+    public Signer getSigner() {
         return signer;
     }
 
-    public void setSigner(String signer) {
+    public void setSigner(Signer signer) {
         this.signer = signer;
     }
 

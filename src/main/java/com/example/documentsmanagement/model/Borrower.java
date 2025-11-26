@@ -15,35 +15,36 @@ public class Borrower {
     @Column(name = "department")
     private String department;
 
+    @Column(name = "rank")
+    private String rank;
+
     @Column(name = "position")
     private String position;
-
-    @Column(name = "id_card_number")
-    private String idCardNumber;
 
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    public String getEmployeeCode() {
-        return employeeCode;
+    public String getStaffCode() {
+        return staffCode;
     }
 
-    public void setEmployeeCode(String employeeCode) {
-        this.employeeCode = employeeCode;
+    public void setStaffCode(String staffCode) {
+        this.staffCode = staffCode;
     }
 
-    @Column(name = "employee_code", unique = true)
-    private String employeeCode;
+    @Column(name = "staff_code", unique = true)
+    private String staffCode;
 
 
     // Constructors
     public Borrower() {}
 
-    public Borrower(String fullName, String department, String position, String idCardNumber, String phoneNumber) {
+    public Borrower(String staffCode, String fullName, String department, String rank, String position, String phoneNumber) {
+        this.staffCode = staffCode;
         this.fullName = fullName;
         this.department = department;
+        this.rank = rank;
         this.position = position;
-        this.idCardNumber = idCardNumber;
         this.phoneNumber = phoneNumber;
     }
 
@@ -72,20 +73,20 @@ public class Borrower {
         this.department = department;
     }
 
+    public String getRank() { 
+        return rank; 
+    } 
+
+    public void setRank(String rank) { 
+        this.rank = rank; 
+    }
+
     public String getPosition() {
         return position;
     }
 
     public void setPosition(String position) {
         this.position = position;
-    }
-
-    public String getIdCardNumber() {
-        return idCardNumber;
-    }
-
-    public void setIdCardNumber(String idCardNumber) {
-        this.idCardNumber = idCardNumber;
     }
 
     public String getPhoneNumber() {

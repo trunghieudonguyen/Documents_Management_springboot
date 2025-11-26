@@ -14,10 +14,10 @@ public interface BorrowerRepository extends JpaRepository<Borrower, Long> {
     // Simple example search by a 'name' property if present
     @Query("""
         select e from Borrower e where lower(COALESCE(e.fullName, '')) like lower(concat('%', :q, '%'))
-        OR lower(COALESCE(e.employeeCode, '')) like lower(concat('%', :q, '%'))
+        OR lower(COALESCE(e.staffCode, '')) like lower(concat('%', :q, '%'))
     """)
 
     List<Borrower> searchByName(@Param("q") String q);
 
-    Optional<Borrower> findByEmployeeCode(String employeeCode);
+    Optional<Borrower> findByStaffCode(String staffCode);
 }
