@@ -1,6 +1,8 @@
 package com.example.documentsmanagement.repository;
 
 import com.example.documentsmanagement.model.Librarian;
+import com.example.documentsmanagement.model.Signer;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -48,6 +50,9 @@ public interface LibrarianRepository extends JpaRepository<Librarian, Long> {
      */
     @Query("SELECT l FROM Librarian l WHERE l.email = :input OR l.phoneNumber = :input")
     Optional<Librarian> findByEmailOrPhone(@Param("input") String input);
+
+    
+    Optional<Librarian> findByStaffCode(String staffCode);
 
     // ============================================================
     // 🔐 XÁC THỰC TÀI KHOẢN

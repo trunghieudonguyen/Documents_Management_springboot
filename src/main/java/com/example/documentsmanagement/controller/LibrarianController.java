@@ -3,6 +3,7 @@ package com.example.documentsmanagement.controller;
 import com.example.documentsmanagement.dto.ChangePasswordRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +48,17 @@ public class LibrarianController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Librarian> update(@PathVariable("id") Long id, @RequestBody Librarian changes) {
-        Librarian updated = service.update(id, changes);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Librarian changes) {
+        try {
+            Librarian updated = service.update(id, changes);
+            return ResponseEntity.ok(updated);
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.ok(Map.of("isError", true, "message", "Thông tin đã tồn tại (trùng số hiệu hoặc username)!"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(Map.of("isError", true, "message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.ok(Map.of("isError", true, "message", "Lỗi hệ thống: " + e.getMessage()));
+        }
     }
 
     // endpoint đổi mật khẩu
