@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
+
+import com.example.documentsmanagement.model.Borrower;
 import com.example.documentsmanagement.model.Librarian;
 import com.example.documentsmanagement.repository.LibrarianRepository;
 
@@ -39,6 +41,13 @@ public class LibrarianService {
         Optional<Librarian> existingOpt = repository.findById(id);
         if (existingOpt.isEmpty()) {
             throw new RuntimeException("Không tìm thấy thủ thư với ID: " + id);
+        }
+
+        if (changes.getStaffCode() != null && !changes.getStaffCode().trim().isEmpty()) {
+            Optional<Librarian> duplicate = repository.findByStaffCode(changes.getStaffCode().trim());
+            if (duplicate.isPresent() && !duplicate.get().getIdLibrarian().equals(id)) {
+                throw new RuntimeException("Số hiệu trùng với " + duplicate.get().getFullName());
+            }
         }
 
         Librarian existing = existingOpt.get();

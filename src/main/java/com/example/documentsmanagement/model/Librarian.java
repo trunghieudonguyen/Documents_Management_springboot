@@ -1,6 +1,5 @@
 package com.example.documentsmanagement.model;
 import jakarta.persistence.*;
-import com.example.documentsmanagement.util.PasswordUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
@@ -28,7 +27,7 @@ public class Librarian {
     @Column(name = "position")
     private String position;
 
-    @Column(name = "staff_code")
+    @Column(name = "staff_code", unique = true)
     private String staffCode;
 
     @Column(name = "username")
