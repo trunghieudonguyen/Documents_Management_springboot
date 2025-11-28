@@ -2,6 +2,8 @@ package com.example.documentsmanagement.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -10,47 +12,50 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 🔑 Khóa bí mật (thay bằng chuỗi mạnh hơn trong môi trường thực)
-    private static final String SECRET_KEY = "my-super-secret-key-for-jwt-authentication-1234567890";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    // ⏰ Thời gian hết hạn token: 1 giờ
-    private static final long EXPIRATION_TIME = 30L * 24 * 60 * 60 * 1000;
+    @Value("${jwt.expiration-ms}")
+    private long expirationMs;
 
-    private final Key key;
+    private Key key;
 
-    public JwtUtil() {
-        this.key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    @PostConstruct
+    public void init() {
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    /** ✅ Sinh token JWT */
     public String generateToken(String username) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMs);
+
         return Jwts.builder()
                 .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    /** ✅ Lấy username từ token */
-    public String extractUsername(String token) {
-        return parseClaims(token).getBody().getSubject();
-    }
-
-    /** ✅ Kiểm tra token hợp lệ */
-    public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    private Jws<Claims> parseClaims(String token) {
-        return Jwts.parserBuilder()
+    public String getUsernameFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
-                .parseClaimsJws(token);
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
+    }
+
+    public void validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+        } catch (ExpiredJwtException ex) {
+            throw new RuntimeException("TOKEN_EXPIRED");
+        } catch (JwtException ex) {
+            throw new RuntimeException("TOKEN_INVALID");
+        }
     }
 }

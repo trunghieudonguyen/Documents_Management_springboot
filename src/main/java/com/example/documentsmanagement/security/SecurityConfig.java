@@ -1,89 +1,77 @@
 package com.example.documentsmanagement.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.*;
 
 import java.util.List;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtUtil jwtUtil;
+    private static final long DEFAULT_EXPIRATION_TIME =
+            30L * 24 * 60 * 60 * 1000; // 30 ngày mặc định
 
-    public SecurityConfig(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
+    @Value("${jwt.expiration-time-ms:0}")
+    private long expirationTimeFromProperties;
+
+    public long getExpirationTime() {
+        return (expirationTimeFromProperties > 0)
+                ? expirationTimeFromProperties
+                : DEFAULT_EXPIRATION_TIME;
+    }
+
+    @Autowired
+    private JwtFilter jwtFilter;
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        JwtFilter jwtFilter = new JwtFilter(jwtUtil);
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        http.csrf(csrf -> csrf.disable());
 
-        http
-                // Cho phép CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        http.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
 
-                // Tắt CSRF
-                .csrf(AbstractHttpConfigurer::disable)
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/export/**").permitAll()
+                .requestMatchers("/api/request-documents/preview-excel").permitAll()
+                .anyRequest().authenticated()
+        );
 
-                // Phân quyền
-                .authorizeHttpRequests(auth -> auth
-                        // ⚠️ Các API không cần JWT
-                        .requestMatchers(
-                                "/api/auth/**",                     // login, register
-                                "/public/**",                       // file tĩnh
-                                "/error",
-                                "/favicon.ico",
-                                "/uploads/**",
-
-                                // ---- ⚡ THÊM API PREVIEW / EXPORT ----
-                                "/api/request-documents/preview-excel"
-                                //"/api/request-documents/export-excel"
-                        ).permitAll()
-
-                        // Các API khác phải có JWT
-                        .anyRequest().authenticated()
-                )
-
-                // Gắn filter JWT vào trước UsernamePasswordAuthenticationFilter
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Tắt form login và basic auth mặc định
-                .formLogin(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable);
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * Cấu hình CORS cho React
-     */
+    // CORS CHUẨN cho React FE
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
-        ));
-
+        config.setAllowedOrigins(List.of("http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 }
